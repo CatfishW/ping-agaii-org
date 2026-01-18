@@ -1,0 +1,6 @@
+# Temporary files
+temp_nginx.conf
+fixed_nginx.conf
+temp_frontend/
+__pycache__/
+*.pyc

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rowan University PING | Interactive Simulations</title>
+    <meta name="description" content="Explore interactive simulations for science and math, designed by Rowan University PING. High-quality educational tools for K-12 and beyond.">
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <div class="rowan-brand">
+                    <span class="university">ROWAN UNIVERSITY</span>
+                    <span class="ping">PING</span>
+                </div>
+                <div class="phet-style-logo">
+                    <span class="p">P</span><span class="h">H</span><span class="e">E</span><span class="t">T</span>
+                    <small>INSPIRED</small>
+                </div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#" class="active">Simulations</a></li>
+                <li><a href="#">Teaching</a></li>
+                <li><a href="#">Research</a></li>
+                <li><a href="#">About</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button class="icon-btn" id="search-toggle"><i data-lucide="search"></i></button>
+                <button class="btn btn-primary">Sign In</button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="hero-overlay"></div>
+            <div class="container hero-content">
+                <h1>Interactive Simulations for Science and Math</h1>
+                <p>Engage with premium educational tools designed for exploration and discovery.</p>
+                <div class="hero-search">
+                    <input type="text" placeholder="Search simulations..." id="main-search">
+                    <button class="btn-search"><i data-lucide="search"></i></button>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-num">1.8B+</span>
+                        <span class="stat-label">Simulations Delivered</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-num">150+</span>
+                        <span class="stat-label">Interactive Modules</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="sim-browser container">
+            <aside class="filters">
+                <h3>Filter By</h3>
+                <div class="filter-group">
+                    <h4>Subject</h4>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="physics" checked>
+                        <span class="checkmark"></span> Physics
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="math">
+                        <span class="checkmark"></span> Math
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="chemistry">
+                        <span class="checkmark"></span> Chemistry
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="biology">
+                        <span class="checkmark"></span> Biology
+                    </label>
+                </div>
+                <div class="filter-group">
+                    <h4>Age Level</h4>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="k1-6">
+                        <span class="checkmark"></span> K1 ~ 6
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="k6-9">
+                        <span class="checkmark"></span> K6 ~ 9
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="k10-12">
+                        <span class="checkmark"></span> K10 ~ 12
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" value="beyond">
+                        <span class="checkmark"></span> Beyond K12
+                    </label>
+                </div>
+            </aside>
+
+            <div class="sim-content">
+                <div class="sim-header">
+                    <h2 id="results-count">All Simulations</h2>
+                    <div class="view-options">
+                        <button class="icon-btn active"><i data-lucide="layout-grid"></i></button>
+                        <button class="icon-btn"><i data-lucide="list"></i></button>
+                        <select id="sort-by">
+                            <option value="newest">Newest</option>
+                            <option value="popular">Most Popular</option>
+                            <option value="alpha">A-Z</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="sim-grid" id="sim-grid">
+                    <!-- Simulations will be injected by JavaScript -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <div class="rowan-brand">
+                    <span class="university">ROWAN UNIVERSITY</span>
+                    <span class="ping">PING</span>
+                </div>
+                <p>Empowering education through interactive technology and collaborative research.</p>
+                <div class="social-links">
+                    <a href="#"><i data-lucide="twitter"></i></a>
+                    <a href="#"><i data-lucide="facebook"></i></a>
+                    <a href="#"><i data-lucide="github"></i></a>
+                    <a href="#"><i data-lucide="linkedin"></i></a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <h4>Simulations</h4>
+                <ul>
+                    <li><a href="#">New Simulations</a></li>
+                    <li><a href="#">Physics</a></li>
+                    <li><a href="#">Biology</a></li>
+                    <li><a href="#">Chemistry</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Contact</h4>
+                <ul>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Accessibility</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Source Code</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Rowan University PING. Inspired by PhET Interactive Simulations, University of Colorado Boulder.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
