@@ -208,14 +208,90 @@ function renderFilterView() {
 }
 
 function renderCustomizeView() {
-    // Placeholder for customization logic
     const customizeView = document.getElementById("customize-view");
-    // We already have a placeholder in HTML, but we could make it more dynamic here
+    customizeView.innerHTML = `
+        <div class="customize-container">
+            <h2 class="section-title">Personalize Your Studio</h2>
+            <div class="settings-grid">
+                <div class="setting-card">
+                    <div class="setting-info">
+                        <i data-lucide="moon"></i>
+                        <div>
+                            <h4>Dark Mode</h4>
+                            <p>Toggle dark visual theme for the studio.</p>
+                        </div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="dark-mode-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="setting-card">
+                    <div class="setting-info">
+                        <i data-lucide="layout-grid"></i>
+                        <div>
+                            <h4>Compact View</h4>
+                            <p>Show more simulations on a single screen.</p>
+                        </div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="setting-card">
+                    <div class="setting-info">
+                        <i data-lucide="bell"></i>
+                        <div>
+                            <h4>Notifications</h4>
+                            <p>Get alerted when new simulations are released.</p>
+                        </div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="favorites-section">
+                <h3><i data-lucide="heart"></i> My Favorite Simulations</h3>
+                <div class="favorites-placeholder">
+                    <p>No favorites yet. Click the heart icon on any simulation to add it here!</p>
+                </div>
+            </div>
+        </div>
+    `;
+    lucide.createIcons();
+
+    // Dark mode toggle logic
+    document.getElementById('dark-mode-toggle')?.addEventListener('change', (e) => {
+        document.body.classList.toggle('dark-theme', e.target.checked);
+    });
 }
 
 function renderBrowseView() {
     const browseView = document.getElementById("browse-view");
-    let content = `<h2 class="section-title">Browse Content</h2>`;
+
+    // Featured Section
+    const featured = simulations.find(s => s.badge === "Featured") || simulations[0];
+    let content = `
+        <div class="featured-banner">
+            <div class="featured-info">
+                <span class="badge-featured">FEATURED</span>
+                <h1>${featured.title}</h1>
+                <p>${featured.description}</p>
+                <div class="featured-actions">
+                    <button class="btn btn-primary" onclick="window.location.href='${featured.url}'">Play Now</button>
+                    <button class="btn btn-outline"><i data-lucide="info"></i> Learn More</button>
+                </div>
+            </div>
+            <div class="featured-visual">
+                <img src="${featured.image}" alt="Featured Simulation">
+            </div>
+        </div>
+        <h2 class="section-title">Explore by Subject</h2>
+    `;
 
     subjectsOrder.forEach(subj => {
         const subjSims = simulations.filter(s => s.subject === subj.id);
