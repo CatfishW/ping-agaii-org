@@ -85,30 +85,8 @@ nav {
     display: flex;
     align-items: baseline;
     font-weight: 800;
-    font-size: 1.5rem;
-}
-
-.phet-style-logo .p {
-    color: #0077C8;
-}
-
-.phet-style-logo .h {
-    color: #E31B23;
-}
-
-.phet-style-logo .e {
-    color: #FDB913;
-}
-
-.phet-style-logo .t {
-    color: #2E8B57;
-}
-
-.phet-style-logo small {
-    font-size: 0.6rem;
-    margin-left: 0.3rem;
-    color: var(--text-muted);
-    font-weight: 400;
+    font-size: 1.8rem;
+    letter-spacing: -1px;
 }
 
 .nav-links {
@@ -299,15 +277,198 @@ nav {
     background: rgba(255, 255, 255, 0.3);
 }
 
-/* Sim Browser */
+/* Sim Browser & Tabs */
 .sim-browser {
+    padding: 5rem 0;
+}
+
+.tab-navigation {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 3rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+}
+
+.tab-btn:hover {
+    color: var(--primary-color);
+}
+
+.tab-btn.active {
+    color: var(--accent-color);
+}
+
+.tab-btn::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background: var(--accent-color);
+    transition: var(--transition);
+}
+
+.tab-btn.active::after {
+    width: 100%;
+}
+
+.tab-view {
+    display: none;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.tab-view.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.section-title {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+.browse-category {
+    margin-bottom: 4rem;
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.category-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--primary-color);
+}
+
+.category-title i {
+    color: var(--accent-color);
+}
+
+.category-title h3 {
+    font-size: 1.6rem;
+}
+
+.view-all {
+    color: var(--accent-color);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+.view-all:hover {
+    text-decoration: underline;
+    transform: translateX(5px);
+}
+
+.sim-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.filter-layout {
     display: grid;
     grid-template-columns: 280px 1fr;
     gap: 3rem;
-    padding: 5rem 2rem;
+    animation: slideIn 0.5s ease-out;
 }
 
-/* Sidebar Filters */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.customize-placeholder {
+    padding: 6rem;
+    text-align: center;
+    background: white;
+    border-radius: 30px;
+    border: 2px dashed var(--border-color);
+    color: var(--text-muted);
+}
+
+.customize-placeholder i {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 1.5rem;
+    color: var(--accent-color);
+}
+
+.customize-placeholder h3 {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.customize-placeholder p {
+    margin-bottom: 2rem;
+}
+
+/* Feature Icons on Cards */
+.card-tech-icons {
+    display: flex;
+    gap: 0.5rem;
+    margin-right: auto;
+}
+
+.tech-icon {
+    width: 20px;
+    height: 20px;
+    padding: 3px;
+    border-radius: 4px;
+    background: #f0f0f0;
+    font-size: 10px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+}
+
+.tech-icon.html5 {
+    color: #E34F26;
+    background: rgba(227, 79, 38, 0.1);
+}
+
 .filters h3 {
     font-size: 1.5rem;
     margin-bottom: 2rem;
