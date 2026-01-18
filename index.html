@@ -27,31 +27,34 @@
             </div>
             <ul class="nav-links">
                 <li class="dropdown">
-                    <a href="#" class="active">SIMULATIONS <i data-lucide="chevron-down"></i></a>
+                    <a href="#" class="active" data-page="simulations">SIMULATIONS <i
+                            data-lucide="chevron-down"></i></a>
                     <div class="dropdown-content">
-                        <a href="#" onclick="openFilterWithSubject('all')">All Sims</a>
+                        <a href="#" onclick="openFilterWithSubject('all'); return false;">All Sims</a>
                         <hr>
-                        <a href="#" onclick="openFilterWithSubject('physics')">Physics</a>
-                        <a href="#" onclick="openFilterWithSubject('math')">Math & Statistics</a>
-                        <a href="#" onclick="openFilterWithSubject('chemistry')">Chemistry</a>
-                        <a href="#" onclick="openFilterWithSubject('earth-science')">Earth & Space</a>
-                        <a href="#" onclick="openFilterWithSubject('biology')">Biology</a>
+                        <a href="#" onclick="openFilterWithSubject('physics'); return false;">Physics</a>
+                        <a href="#" onclick="openFilterWithSubject('math'); return false;">Math & Statistics</a>
+                        <a href="#" onclick="openFilterWithSubject('chemistry'); return false;">Chemistry</a>
+                        <a href="#" onclick="openFilterWithSubject('earth-science'); return false;">Earth & Space</a>
+                        <a href="#" onclick="openFilterWithSubject('biology'); return false;">Biology</a>
                         <hr>
                         <a href="#">Translated Sims</a>
                         <a href="#">Customizable Sims</a>
                     </div>
                 </li>
-                <li><a href="#" class="nav-studio">STUDIO <i data-lucide="sparkles" class="icon-spark"></i></a></li>
-                <li><a href="#">TEACHING</a></li>
-                <li><a href="#">RESEARCH</a></li>
+                <li><a href="#" onclick="showPage('studio'); return false;" data-page="studio" class="nav-studio">STUDIO
+                        <i data-lucide="sparkles" class="icon-spark"></i></a></li>
+                <li><a href="#" onclick="showPage('teaching'); return false;" data-page="teaching">TEACHING</a></li>
+                <li><a href="#" onclick="showPage('research'); return false;" data-page="research">RESEARCH</a></li>
                 <li class="dropdown">
-                    <a href="#">INITIATIVES <i data-lucide="chevron-down"></i></a>
+                    <a href="#" onclick="showPage('initiatives'); return false;" data-page="initiatives">INITIATIVES <i
+                            data-lucide="chevron-down"></i></a>
                     <div class="dropdown-content">
-                        <a href="#">Inclusive Design</a>
-                        <a href="#">PING Global</a>
-                        <a href="#">DEIB in STEM Ed</a>
-                        <a href="#">SceneryStack OSE</a>
-                        <a href="#">Impact Report</a>
+                        <a href="#" onclick="showPage('initiatives'); return false;">Inclusive Design</a>
+                        <a href="#" onclick="showPage('initiatives'); return false;">PING Global</a>
+                        <a href="#" onclick="showPage('initiatives'); return false;">DEIB in STEM Ed</a>
+                        <a href="#" onclick="showPage('initiatives'); return false;">SceneryStack OSE</a>
+                        <a href="#" onclick="showPage('initiatives'); return false;">Impact Report</a>
                     </div>
                 </li>
             </ul>
@@ -161,12 +164,129 @@
 
                     <!-- Customize View -->
                     <div id="customize-view" class="tab-view">
-                        <div class="customize-placeholder">
-                            <i data-lucide="settings-2"></i>
-                            <h3>Customize Your Experience</h3>
-                            <p>Select your favorite simulations to create a personalized dashboard.</p>
-                            <button class="btn btn-primary">Start Personalizing</button>
-                        </div>
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STUDIO Page Section -->
+        <section id="studio-page" class="page-section" style="display:none;">
+            <div class="container page-content">
+                <div class="page-header">
+                    <i data-lucide="sparkles" class="page-icon"></i>
+                    <h1>PING Studio</h1>
+                </div>
+                <p class="page-description">Create, customize, and share your own simulations using PING Studio. Design
+                    interactive learning experiences tailored to your curriculum.</p>
+                <div class="feature-cards">
+                    <div class="feature-card">
+                        <i data-lucide="edit-3"></i>
+                        <h3>Create Simulations</h3>
+                        <p>Build custom interactive simulations using our drag-and-drop editor.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i data-lucide="share-2"></i>
+                        <h3>Share & Collaborate</h3>
+                        <p>Share your creations with colleagues and students worldwide.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i data-lucide="bar-chart-2"></i>
+                        <h3>Track Analytics</h3>
+                        <p>See how students engage with your simulations in real-time.</p>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-large">Launch Studio</button>
+            </div>
+        </section>
+
+        <!-- TEACHING Page Section -->
+        <section id="teaching-page" class="page-section" style="display:none;">
+            <div class="container page-content">
+                <div class="page-header">
+                    <i data-lucide="book-open" class="page-icon"></i>
+                    <h1>Teaching Resources</h1>
+                </div>
+                <p class="page-description">Access lesson plans, activity guides, and instructional tips for K-12
+                    educators. All resources are free and designed by experienced teachers.</p>
+                <div class="resource-grid">
+                    <div class="resource-card">
+                        <h3>Lesson Plans</h3>
+                        <p>Ready-to-use lessons aligned with common standards.</p>
+                        <span class="resource-count">120+ Plans</span>
+                    </div>
+                    <div class="resource-card">
+                        <h3>Activity Worksheets</h3>
+                        <p>Printable and digital worksheets for students.</p>
+                        <span class="resource-count">80+ Sheets</span>
+                    </div>
+                    <div class="resource-card">
+                        <h3>Virtual Labs</h3>
+                        <p>Step-by-step guided experiments using simulations.</p>
+                        <span class="resource-count">45+ Labs</span>
+                    </div>
+                    <div class="resource-card">
+                        <h3>Professional Development</h3>
+                        <p>Webinars and courses for educator training.</p>
+                        <span class="resource-count">Free Access</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RESEARCH Page Section -->
+        <section id="research-page" class="page-section" style="display:none;">
+            <div class="container page-content">
+                <div class="page-header">
+                    <i data-lucide="microscope" class="page-icon"></i>
+                    <h1>Research & Impact</h1>
+                </div>
+                <p class="page-description">Explore peer-reviewed publications, usage data, and efficacy studies that
+                    demonstrate the impact of interactive simulations on learning outcomes.</p>
+                <div class="stat-cards">
+                    <div class="stat-card">
+                        <span class="stat-value">1.8B+</span>
+                        <span class="stat-label">Simulations Delivered</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">200+</span>
+                        <span class="stat-label">Research Papers</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">190</span>
+                        <span class="stat-label">Countries Reached</span>
+                    </div>
+                </div>
+                <a href="#" class="btn btn-outline">View Publications</a>
+            </div>
+        </section>
+
+        <!-- INITIATIVES Page Section -->
+        <section id="initiatives-page" class="page-section" style="display:none;">
+            <div class="container page-content">
+                <div class="page-header">
+                    <i data-lucide="globe" class="page-icon"></i>
+                    <h1>Our Initiatives</h1>
+                </div>
+                <p class="page-description">Learn about our commitment to inclusive design, global outreach, and
+                    advancing STEM education for all learners.</p>
+                <div class="initiative-list">
+                    <div class="initiative-item">
+                        <h3>Inclusive Design</h3>
+                        <p>Making simulations accessible for students with disabilities, including screen reader support
+                            and keyboard navigation.</p>
+                    </div>
+                    <div class="initiative-item">
+                        <h3>PING Global</h3>
+                        <p>Translating simulations into 100+ languages and partnering with educators worldwide.</p>
+                    </div>
+                    <div class="initiative-item">
+                        <h3>DEIB in STEM Ed</h3>
+                        <p>Promoting diversity, equity, inclusion, and belonging in science and math education.</p>
+                    </div>
+                    <div class="initiative-item">
+                        <h3>SceneryStack OSE</h3>
+                        <p>Our open-source ecosystem powering the next generation of web simulations.</p>
                     </div>
                 </div>
             </div>

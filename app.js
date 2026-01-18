@@ -283,7 +283,7 @@ function renderBrowseView() {
                 <p>${featured.description}</p>
                 <div class="featured-actions">
                     <button class="btn btn-primary" onclick="window.location.href='${featured.url}'">Play Now</button>
-                    <button class="btn btn-outline"><i data-lucide="info"></i> Learn More</button>
+                    <button class="btn btn-outline" onclick="window.location.href='https://game.agaii.org/'"><i data-lucide="info"></i> Learn More</button>
                 </div>
             </div>
             <div class="featured-visual">
@@ -303,7 +303,7 @@ function renderBrowseView() {
                             <i data-lucide="${subj.icon}"></i>
                             <h3>${subj.label}</h3>
                         </div>
-                        <a href="#" class="view-all" onclick="openFilterWithSubject('${subj.id}')">View All ${subj.label} ></a>
+                        <a href="#" class="view-all" onclick="openFilterWithSubject('${subj.id}'); return false;">View All ${subj.label} ></a>
                     </div>
                     <div class="sim-row">
                         ${subjSims.map(sim => createSimCard(sim)).join("")}
@@ -318,14 +318,19 @@ function renderBrowseView() {
 }
 
 function openFilterWithSubject(subjId) {
+    // First show simulations page
+    showPage('simulations');
+
     const filterTab = document.querySelector('[data-tab="filter"]');
     filterTab.click();
 
     // Uncheck all subjects
     document.querySelectorAll(".filters input[value]").forEach(i => i.checked = false);
     // Check target subject
-    const targetCheck = document.querySelector(`.filters input[value="${subjId}"]`);
-    if (targetCheck) targetCheck.checked = true;
+    if (subjId !== 'all') {
+        const targetCheck = document.querySelector(`.filters input[value="${subjId}"]`);
+        if (targetCheck) targetCheck.checked = true;
+    }
 
     filterSimulations();
 }
@@ -333,6 +338,39 @@ function openFilterWithSubject(subjId) {
 function bindFilterEvents() {
     document.querySelectorAll(".filters input").forEach(input => {
         input.addEventListener("change", filterSimulations);
+    });
+}
+
+// Page Navigation
+function showPage(pageName) {
+    // Hide all page sections
+    document.querySelectorAll('.page-section').forEach(sec => sec.style.display = 'none');
+
+    // Hide or show main content sections
+    const hero = document.querySelector('.hero');
+    const simBrowser = document.getElementById('sim-browser');
+
+    if (pageName === 'simulations') {
+        hero.style.display = 'block';
+        simBrowser.style.display = 'block';
+    } else {
+        hero.style.display = 'none';
+        simBrowser.style.display = 'none';
+
+        // Show the target page
+        const targetPage = document.getElementById(`${pageName}-page`);
+        if (targetPage) {
+            targetPage.style.display = 'block';
+            lucide.createIcons();
+        }
+    }
+
+    // Update active nav link
+    document.querySelectorAll('.nav-links a[data-page]').forEach(link => {
+        link.classList.remove('active');
+        if (link.dataset.page === pageName) {
+            link.classList.add('active');
+        }
     });
 }
 
