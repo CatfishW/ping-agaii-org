@@ -4,7 +4,7 @@
     --secondary-color: #FFCC00;
     /* Rowan Gold */
     --accent-color: #E63946;
-    /* Vibrant Red for PhET feel */
+    /* Vibrant Red for PING feel */
     --text-color: #2D3142;
     --text-muted: #4F5D75;
     --bg-light: #F8F9FA;
@@ -81,12 +81,84 @@ nav {
     color: var(--text-muted);
 }
 
-.phet-style-logo {
+/* Dropdown styles */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: var(--bg-white);
+    min-width: 220px;
+    box-shadow: var(--card-shadow);
+    z-index: 1001;
+    border-radius: 8px;
+    padding: 0.5rem 0;
+    margin-top: 0.5rem;
+    animation: fadeInDropdown 0.3s ease-out;
+}
+
+@keyframes fadeInDropdown {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown-content a {
+    color: var(--text-color);
+    padding: 0.8rem 1.5rem;
+    text-decoration: none;
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.dropdown-content a:hover {
+    background-color: var(--bg-light);
+    color: var(--accent-color);
+}
+
+.dropdown-content hr {
+    border: 0;
+    border-top: 1px solid var(--border-color);
+    margin: 0.5rem 0;
+}
+
+.nav-studio {
     display: flex;
-    align-items: baseline;
-    font-weight: 800;
-    font-size: 1.8rem;
-    letter-spacing: -1px;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.icon-spark {
+    color: var(--accent-color);
+    width: 16px;
+    height: 16px;
+}
+
+.user-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--text-muted);
 }
 
 .nav-links {
@@ -98,9 +170,14 @@ nav {
 .nav-links a {
     text-decoration: none;
     color: var(--text-color);
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
     transition: var(--transition);
     position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
 }
 
 .nav-links a:hover,

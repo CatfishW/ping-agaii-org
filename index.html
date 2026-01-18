@@ -24,19 +24,42 @@
                     <span class="university">ROWAN UNIVERSITY</span>
                     <span class="ping">PING</span>
                 </div>
-                <div class="phet-style-logo">
-                    <span class="p">P</span><span class="h">H</span><span class="e">E</span><span class="t">T</span>
-                </div>
             </div>
             <ul class="nav-links">
-                <li><a href="#" class="active">Simulations</a></li>
-                <li><a href="#">Teaching</a></li>
-                <li><a href="#">Research</a></li>
-                <li><a href="#">About</a></li>
+                <li class="dropdown">
+                    <a href="#" class="active">SIMULATIONS <i data-lucide="chevron-down"></i></a>
+                    <div class="dropdown-content">
+                        <a href="#" onclick="openFilterWithSubject('all')">All Sims</a>
+                        <hr>
+                        <a href="#" onclick="openFilterWithSubject('physics')">Physics</a>
+                        <a href="#" onclick="openFilterWithSubject('math')">Math & Statistics</a>
+                        <a href="#" onclick="openFilterWithSubject('chemistry')">Chemistry</a>
+                        <a href="#" onclick="openFilterWithSubject('earth-science')">Earth & Space</a>
+                        <a href="#" onclick="openFilterWithSubject('biology')">Biology</a>
+                        <hr>
+                        <a href="#">Translated Sims</a>
+                        <a href="#">Customizable Sims</a>
+                    </div>
+                </li>
+                <li><a href="#" class="nav-studio">STUDIO <i data-lucide="sparkles" class="icon-spark"></i></a></li>
+                <li><a href="#">TEACHING</a></li>
+                <li><a href="#">RESEARCH</a></li>
+                <li class="dropdown">
+                    <a href="#">INITIATIVES <i data-lucide="chevron-down"></i></a>
+                    <div class="dropdown-content">
+                        <a href="#">Inclusive Design</a>
+                        <a href="#">PING Global</a>
+                        <a href="#">DEIB in STEM Ed</a>
+                        <a href="#">SceneryStack OSE</a>
+                        <a href="#">Impact Report</a>
+                    </div>
+                </li>
             </ul>
             <div class="nav-actions">
                 <button class="icon-btn" id="search-toggle"><i data-lucide="search"></i></button>
-                <button class="btn btn-primary">Sign In</button>
+                <div class="user-actions">
+                    <i data-lucide="user"></i>
+                </div>
             </div>
         </nav>
     </header>
@@ -186,7 +209,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2026 Rowan University PING. Inspired by PhET Interactive Simulations, University of Colorado
+            <p>&copy; 2026 Rowan University PING. Inspired by PING Interactive Simulations, University of Colorado
                 Boulder.</p>
         </div>
     </footer>
