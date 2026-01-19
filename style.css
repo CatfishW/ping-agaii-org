@@ -58,7 +58,19 @@ nav {
 .logo {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1rem;
+    text-decoration: none;
+}
+
+.main-logo {
+    height: 55px;
+    width: auto;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.1));
+    transition: var(--transition);
+}
+
+.main-logo:hover {
+    transform: translateY(-2px);
 }
 
 .rowan-brand {
@@ -66,6 +78,24 @@ nav {
     flex-direction: column;
     border-right: 2px solid var(--primary-color);
     padding-right: 1.5rem;
+}
+
+.footer-logo {
+    height: 48px;
+    width: auto;
+    margin-right: 1rem;
+    filter: brightness(0) invert(1);
+    /* Make it white in footer */
+}
+
+.footer-logo-box {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.footer-logo-box .rowan-brand {
+    border-right: 2px solid var(--secondary-color);
 }
 
 .university {
