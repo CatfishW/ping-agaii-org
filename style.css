@@ -98,17 +98,11 @@ nav {
     border-right: 2px solid var(--secondary-color);
 }
 
-.university {
-    font-weight: 700;
-    font-size: 0.9rem;
-    letter-spacing: 2px;
-    color: var(--primary-color);
-}
-
 .ping {
-    font-weight: 300;
-    font-size: 1.2rem;
-    color: var(--text-muted);
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    letter-spacing: 1px;
 }
 
 /* Dropdown styles */
