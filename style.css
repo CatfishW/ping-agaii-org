@@ -108,32 +108,17 @@ nav {
 
 .brand-title {
     font-weight: 700;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     line-height: 1.2;
     color: var(--primary-color);
-    letter-spacing: 0.5px;
-}
-
-.brand-tagline {
-    font-size: 0.65rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    letter-spacing: 0.5px;
-    margin-top: 2px;
+    letter-spacing: 0.2px;
 }
 
 .footer-logo-box .brand-title {
     color: var(--secondary-color);
 }
 
-.footer-logo-box .brand-tagline {
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.footer-logo-box .tagline {
-    color: rgba(255, 255, 255, 0.7);
-}
+/* Dropdown styles */
 
 /* Dropdown styles */
 .dropdown {
