@@ -1,3 +1,8 @@
+html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+}
+
 :root {
     --primary-color: #57150B;
     /* Rowan Brown */
@@ -59,8 +64,8 @@ nav {
     display: flex;
     align-items: center;
     text-decoration: none;
-    gap: 0;
-    /* Removed gap to control spacing strictly with divider margins */
+    gap: 1rem;
+    /* Restored padding */
 }
 
 .main-logo {
@@ -78,8 +83,8 @@ nav {
     width: 1px;
     height: 35px;
     background: var(--border-color);
-    margin: 0 0.6rem;
-    /* Tightened from 0.7rem + 1rem gap */
+    margin: 0 1.2rem;
+    /* Restored padding */
     opacity: 0.6;
 }
 
@@ -108,10 +113,11 @@ nav {
 
 .brand-title {
     font-weight: 700;
-    font-size: 1.15rem;
-    line-height: 1.1;
+    font-size: 1.25rem;
+    /* Slightly larger for one-line title */
+    line-height: 1;
     color: var(--primary-color);
-    letter-spacing: -0.1px;
+    letter-spacing: -0.2px;
 }
 
 .footer-logo-box .brand-title {
