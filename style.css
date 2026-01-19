@@ -399,13 +399,14 @@ nav {
     text-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-.stat-label {
-    font-size: 0.85rem;
+.hero .stat-label {
+    font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 2px;
-    color: rgba(255, 255, 255, 0.8);
-    /* Changed from default dark text to white */
-    font-weight: 600;
+    color: #ffffff;
+    /* Pure white for maximum visibility */
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .stat-divider {
