@@ -24,12 +24,12 @@
                 <img src="images/logo.png" alt="PING Logo" class="main-logo">
                 <div class="brand-divider"></div>
                 <div class="brand-info">
-                    <span class="brand-title">Interactive Learning</span>
+                    <span class="brand-title">Personalized Instruction and<br>Need-aware Gamification</span>
                 </div>
             </div>
             <ul class="nav-links">
                 <li class="dropdown">
-                    <a href="#sim-browser" class="active">MODULES <i data-lucide="chevron-down"></i></a>
+                    <a href="#" class="active" data-page="simulations">MODULES <i data-lucide="chevron-down"></i></a>
                     <div class="dropdown-content">
                         <a href="#" onclick="openFilterWithSubject('all'); return false;">All Sims</a>
                         <hr>
@@ -43,18 +43,19 @@
                         <a href="#">Customizable Sims</a>
                     </div>
                 </li>
-                <li><a href="#studio-page" class="nav-studio">STUDIO
+                <li><a href="#" onclick="showPage('studio'); return false;" data-page="studio" class="nav-studio">STUDIO
                         <i data-lucide="sparkles" class="icon-spark"></i></a></li>
-                <li><a href="#teaching-page">TEACHING</a></li>
-                <li><a href="#research-page">RESEARCH</a></li>
+                <li><a href="#" onclick="showPage('teaching'); return false;" data-page="teaching">TEACHING</a></li>
+                <li><a href="#" onclick="showPage('research'); return false;" data-page="research">RESEARCH</a></li>
                 <li class="dropdown">
-                    <a href="#initiatives-page">INITIATIVES <i data-lucide="chevron-down"></i></a>
+                    <a href="#" onclick="showPage('initiatives'); return false;" data-page="initiatives">INITIATIVES <i
+                            data-lucide="chevron-down"></i></a>
                     <div class="dropdown-content">
-                        <a href="#initiatives-page">Inclusive Design</a>
-                        <a href="#initiatives-page">PING Global</a>
-                        <a href="#initiatives-page">DEIB in STEM Ed</a>
-                        <a href="#initiatives-page">SceneryStack OSE</a>
-                        <a href="#initiatives-page">Impact Report</a>
+                        <a href="#" onclick="showPage('initiatives'); return false;">Inclusive Design</a>
+                        <a href="#" onclick="showPage('initiatives'); return false;">PING Global</a>
+                        <a href="#" onclick="showPage('initiatives'); return false;">DEIB in STEM Ed</a>
+                        <a href="#" onclick="showPage('initiatives'); return false;">SceneryStack OSE</a>
+                        <a href="#" onclick="showPage('initiatives'); return false;">Impact Report</a>
                     </div>
                 </li>
             </ul>
@@ -171,7 +172,7 @@
         </section>
 
         <!-- STUDIO Page Section -->
-        <section id="studio-page" class="page-section">
+        <section id="studio-page" class="page-section" style="display:none;">
             <div class="container page-content">
                 <div class="page-header">
                     <i data-lucide="sparkles" class="page-icon"></i>
@@ -201,7 +202,7 @@
         </section>
 
         <!-- TEACHING Page Section -->
-        <section id="teaching-page" class="page-section">
+        <section id="teaching-page" class="page-section" style="display:none;">
             <div class="container page-content">
                 <div class="page-header">
                     <i data-lucide="book-open" class="page-icon"></i>
@@ -235,7 +236,7 @@
         </section>
 
         <!-- RESEARCH Page Section -->
-        <section id="research-page" class="page-section">
+        <section id="research-page" class="page-section" style="display:none;">
             <div class="container page-content">
                 <div class="page-header">
                     <i data-lucide="microscope" class="page-icon"></i>
@@ -246,7 +247,7 @@
                 <div class="stat-cards">
                     <div class="stat-card">
                         <span class="stat-value">80+</span>
-                        <span class="stat-label">Precision Modules</span>
+                        <span class="stat-label">Research Backed Modules</span>
                     </div>
                     <div class="stat-card">
                         <span class="stat-value">15+</span>
@@ -262,7 +263,7 @@
         </section>
 
         <!-- INITIATIVES Page Section -->
-        <section id="initiatives-page" class="page-section">
+        <section id="initiatives-page" class="page-section" style="display:none;">
             <div class="container page-content">
                 <div class="page-header">
                     <i data-lucide="globe" class="page-icon"></i>
@@ -301,7 +302,7 @@
                     <img src="images/logo.png" alt="PING Logo" class="footer-logo">
                     <div class="brand-divider"></div>
                     <div class="brand-info">
-                        <span class="brand-title">Interactive Learning</span>
+                        <span class="brand-title">Personalized Instruction and<br>Need-aware Gamification</span>
                     </div>
                 </div>
                 <p>Empowering education through interactive technology and collaborative research.</p>

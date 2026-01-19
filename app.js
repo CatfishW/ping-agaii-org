@@ -318,8 +318,8 @@ function renderBrowseView() {
 }
 
 function openFilterWithSubject(subjId) {
-    // First scroll to simulations section
-    showPage('sim-browser');
+    // First show simulations page
+    showPage('simulations');
 
     const filterTab = document.querySelector('[data-tab="filter"]');
     filterTab.click();
@@ -342,17 +342,33 @@ function bindFilterEvents() {
 }
 
 // Page Navigation
-function showPage(pageId) {
-    const target = document.getElementById(`${pageId}-page`) || document.getElementById(pageId);
-    if (target) {
-        target.scrollIntoView({ behavior: 'smooth' });
+function showPage(pageName) {
+    // Hide all page sections
+    document.querySelectorAll('.page-section').forEach(sec => sec.style.display = 'none');
+
+    // Hide or show main content sections
+    const hero = document.querySelector('.hero');
+    const simBrowser = document.getElementById('sim-browser');
+
+    if (pageName === 'simulations') {
+        hero.style.display = 'block';
+        simBrowser.style.display = 'block';
+    } else {
+        hero.style.display = 'none';
+        simBrowser.style.display = 'none';
+
+        // Show the target page
+        const targetPage = document.getElementById(`${pageName}-page`);
+        if (targetPage) {
+            targetPage.style.display = 'block';
+            lucide.createIcons();
+        }
     }
 
     // Update active nav link
-    document.querySelectorAll('.nav-links a').forEach(link => {
+    document.querySelectorAll('.nav-links a[data-page]').forEach(link => {
         link.classList.remove('active');
-        const href = link.getAttribute('href');
-        if (href === `#${pageId}` || href === `#${pageId}-page`) {
+        if (link.dataset.page === pageName) {
             link.classList.add('active');
         }
     });
