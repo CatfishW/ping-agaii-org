@@ -73,10 +73,21 @@ nav {
     transform: translateY(-2px);
 }
 
-.rowan-brand {
+.brand-divider {
+    width: 1px;
+    height: 35px;
+    background: var(--border-color);
+    margin: 0 1.2rem;
+    opacity: 0.8;
+}
+
+.brand-info {
     display: flex;
     flex-direction: column;
-    padding-left: 0.5rem;
+}
+
+.footer-logo-box .brand-divider {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .footer-logo {
@@ -93,25 +104,31 @@ nav {
     margin-bottom: 1.5rem;
 }
 
-.footer-logo-box .rowan-brand {
-    border-right: none;
-}
+/* Brand Info styles replace old brand containers */
 
-.ping {
+.brand-title {
     font-weight: 700;
-    font-size: 1.6rem;
-    line-height: 1;
+    font-size: 1.2rem;
+    line-height: 1.2;
     color: var(--primary-color);
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 }
 
-.tagline {
+.brand-tagline {
     font-size: 0.65rem;
     font-weight: 600;
     text-transform: uppercase;
     color: var(--text-muted);
     letter-spacing: 0.5px;
     margin-top: 2px;
+}
+
+.footer-logo-box .brand-title {
+    color: var(--secondary-color);
+}
+
+.footer-logo-box .brand-tagline {
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .footer-logo-box .tagline {
