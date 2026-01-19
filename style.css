@@ -90,15 +90,12 @@ nav {
 }
 
 .footer-logo-box .brand-divider {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.4);
 }
 
 .footer-logo {
     height: 48px;
     width: auto;
-    margin-right: 1rem;
-    filter: brightness(0) invert(1);
-    /* Make it white in footer */
 }
 
 .footer-logo-box {
