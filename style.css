@@ -77,13 +77,14 @@ nav {
     width: 1px;
     height: 35px;
     background: var(--border-color);
-    margin: 0 1.2rem;
+    margin: 0 0.7rem;
     opacity: 0.8;
 }
 
 .brand-info {
     display: flex;
     flex-direction: column;
+    justify-content: center;
 }
 
 .footer-logo-box .brand-divider {
@@ -108,10 +109,10 @@ nav {
 
 .brand-title {
     font-weight: 700;
-    font-size: 1.1rem;
-    line-height: 1.2;
+    font-size: 1.15rem;
+    line-height: 1.1;
     color: var(--primary-color);
-    letter-spacing: 0.2px;
+    letter-spacing: -0.1px;
 }
 
 .footer-logo-box .brand-title {
