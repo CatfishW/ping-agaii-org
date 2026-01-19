@@ -148,7 +148,7 @@ function renderSimulations(filtered) {
 
     setTimeout(() => {
         grid.innerHTML = filtered.map(sim => createSimCard(sim)).join("");
-        count.innerText = `${filtered.length} Simulations Found`;
+        count.innerText = `${filtered.length} Modules Found`;
         lucide.createIcons();
         grid.style.opacity = "1";
     }, 200);
