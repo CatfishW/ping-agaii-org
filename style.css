@@ -58,8 +58,9 @@ nav {
 .logo {
     display: flex;
     align-items: center;
-    gap: 1rem;
     text-decoration: none;
+    gap: 0;
+    /* Removed gap to control spacing strictly with divider margins */
 }
 
 .main-logo {
@@ -77,8 +78,9 @@ nav {
     width: 1px;
     height: 35px;
     background: var(--border-color);
-    margin: 0 0.7rem;
-    opacity: 0.8;
+    margin: 0 0.6rem;
+    /* Tightened from 0.7rem + 1rem gap */
+    opacity: 0.6;
 }
 
 .brand-info {
