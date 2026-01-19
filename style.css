@@ -76,8 +76,7 @@ nav {
 .rowan-brand {
     display: flex;
     flex-direction: column;
-    border-right: 2px solid var(--primary-color);
-    padding-right: 1.5rem;
+    padding-left: 0.5rem;
 }
 
 .footer-logo {
@@ -95,14 +94,28 @@ nav {
 }
 
 .footer-logo-box .rowan-brand {
-    border-right: 2px solid var(--secondary-color);
+    border-right: none;
 }
 
 .ping {
     font-weight: 700;
-    font-size: 1.5rem;
+    font-size: 1.6rem;
+    line-height: 1;
     color: var(--primary-color);
     letter-spacing: 1px;
+}
+
+.tagline {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+.footer-logo-box .tagline {
+    color: rgba(255, 255, 255, 0.7);
 }
 
 /* Dropdown styles */
