@@ -390,20 +390,30 @@ nav {
 }
 
 .stat-num {
-    font-size: 2rem;
+    font-size: 2.8rem;
+    /* Increased from 2rem */
     font-weight: 800;
     color: var(--secondary-color);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .stat-label {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.8);
+    /* Changed from default dark text to white */
+    font-weight: 600;
 }
 
 .stat-divider {
-    width: 1px;
-    background: rgba(255, 255, 255, 0.3);
+    width: 2px;
+    /* Thicker divider */
+    background: rgba(255, 255, 255, 0.4);
+    height: 60px;
+    align-self: center;
 }
 
 /* Sim Browser & Tabs */
