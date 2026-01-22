@@ -1,0 +1,383 @@
+.class-details-container {
+  min-height: 100vh;
+  background: var(--bg-light);
+  padding: 2rem;
+}
+
+/* Header */
+.class-details-header {
+  margin-bottom: 2rem;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  transition: var(--transition);
+}
+
+.back-button:hover {
+  color: var(--primary-color);
+}
+
+.class-title-section h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.class-title-section p {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+}
+
+.class-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-icon {
+  background: white;
+  border: 2px solid var(--border-color);
+  padding: 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--text-color);
+}
+
+.btn-icon:hover {
+  border-color: #c62828;
+  color: #c62828;
+  background: #ffebee;
+}
+
+/* Stats Overview */
+.class-stats-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-box {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+/* Join Code Card */
+.join-code-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 2rem;
+}
+
+.join-code-card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.join-code-card > p {
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.join-code-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-light);
+  border-radius: 8px;
+}
+
+.join-code-large {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 4px;
+}
+
+.join-code-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Tabs */
+.tabs-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 2px solid var(--border-color);
+  background: var(--bg-light);
+}
+
+.tab {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+
+.tab:hover {
+  background: white;
+  color: var(--primary-color);
+}
+
+.tab.active {
+  color: var(--primary-color);
+  background: white;
+  border-bottom-color: var(--primary-color);
+}
+
+.tab-content {
+  padding: 2rem;
+  min-height: 400px;
+}
+
+/* Students Tab */
+.students-list {
+  width: 100%;
+}
+
+.students-table {
+  width: 100%;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-light);
+  border-radius: 8px;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  align-items: center;
+  transition: var(--transition);
+}
+
+.table-row:hover {
+  background: var(--bg-light);
+}
+
+.student-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.student-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.student-name {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.student-email {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.guest-badge {
+  display: inline-block;
+  background: #fff3cd;
+  color: #856404;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+/* Empty State */
+.empty-tab-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.empty-tab-state svg {
+  margin-bottom: 1.5rem;
+}
+
+.empty-tab-state h3 {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.empty-tab-state p {
+  color: var(--text-muted);
+}
+
+/* Analytics Tab */
+.analytics-content h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 1.5rem;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.analytics-card {
+  background: var(--bg-light);
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.analytics-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.analytics-label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.analytics-notice {
+  background: #e3f2fd;
+  border-left: 4px solid #1976d2;
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.analytics-notice p {
+  color: #1565c0;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .class-details-container {
+    padding: 1rem;
+  }
+
+  .class-title-section h1 {
+    font-size: 1.75rem;
+  }
+
+  .class-stats-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .join-code-display {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .join-code-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .join-code-actions button {
+    width: 100%;
+  }
+
+  .tabs {
+    overflow-x: auto;
+  }
+
+  .tab {
+    white-space: nowrap;
+  }
+
+  .table-header,
+  .table-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .table-header {
+    display: none;
+  }
+
+  .table-row > div:not(.student-info)::before {
+    content: attr(data-label);
+    font-weight: 600;
+    margin-right: 0.5rem;
+  }
+
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}

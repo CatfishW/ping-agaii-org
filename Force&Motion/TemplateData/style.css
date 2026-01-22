@@ -1,0 +1,1632 @@
+/* ===========================================
+   THEME VARIABLES - CSS Custom Properties
+   =========================================== */
+:root {
+    /* Default: Modern SPARC Style - Dark Theme */
+    --primary-color: #e0e0e0;
+    --primary-dark: #1a1f2e;
+    --primary-medium: #2d3447;
+    --primary-light: #ffffff;
+    --background-color: #0f1419;
+    --background-overlay: rgba(15, 20, 25, 0.95);
+    --text-glow: none;
+    --border-glow: 0 2px 12px rgba(0, 212, 255, 0.15);
+    --scanline-speed: 0s;
+    --accent-color: #00d4ff;
+}
+
+/* Pip-Boy Theme */
+[data-theme="pipboy"] {
+    --primary-color: #1eff00;
+    --primary-dark: #0a1a0a;
+    --primary-medium: #1a3a1a;
+    --primary-light: #2a5a2a;
+    --background-color: #050505;
+    --background-overlay: rgba(0, 20, 0, 0.9);
+    --text-glow: 0 0 10px var(--primary-color);
+    --border-glow: 0 0 20px var(--primary-color);
+    --scanline-speed: 10s;
+    --accent-color: #1eff00;
+}
+
+/* Stranger Things Theme */
+[data-theme="stranger-things"] {
+    --primary-color: #ff1d1d;
+    --primary-dark: #1a0808;
+    --primary-medium: #3a1515;
+    --primary-light: #5a2222;
+    --background-color: #0a0505;
+    --background-overlay: rgba(20, 5, 5, 0.95);
+    --text-glow: 0 0 8px #ff1d1d;
+    --border-glow: 0 0 15px #ff1d1d;
+    --scanline-speed: 12s;
+    --accent-color: #ff1d1d;
+}
+
+/* Christmas Lights Effect for Stranger Things */
+[data-theme="stranger-things"] .pipboy-header::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background:
+        radial-gradient(circle at 10% 50%, #ff0000 3px, transparent 4px),
+        radial-gradient(circle at 25% 50%, #00ff00 3px, transparent 4px),
+        radial-gradient(circle at 40% 50%, #ffff00 3px, transparent 4px),
+        radial-gradient(circle at 55% 50%, #0099ff 3px, transparent 4px),
+        radial-gradient(circle at 70% 50%, #ff6600 3px, transparent 4px),
+        radial-gradient(circle at 85% 50%, #ff00ff 3px, transparent 4px);
+    background-size: 100% 100%;
+    animation: christmasLights 1.5s ease-in-out infinite alternate;
+    filter: blur(1px);
+}
+
+[data-theme="stranger-things"] .pipboy-header {
+    position: relative;
+    font-family: 'VT323', 'Courier New', monospace;
+    letter-spacing: 8px;
+    animation: strangerFlicker 0.3s infinite;
+    will-change: opacity;
+}
+
+@keyframes christmasLights {
+    0% {
+        opacity: 0.6;
+        filter: blur(1px);
+    }
+
+    100% {
+        opacity: 1;
+        filter: blur(2px);
+    }
+}
+
+@keyframes strangerFlicker {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.97;
+    }
+}
+
+/* Upside Down Effect for Stranger Things - Simplified */
+[data-theme="stranger-things"] .scanlines::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        linear-gradient(180deg, transparent 0%, rgba(255, 29, 29, 0.01) 50%, transparent 100%);
+    animation: upsideDown 8s ease-in-out infinite;
+    pointer-events: none;
+    will-change: opacity;
+}
+
+@keyframes upsideDown {
+    0%, 100% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* ===========================================
+   BASE STYLES
+   =========================================== */
+body {
+    padding: 0;
+    margin: 0;
+    background-color: var(--background-color);
+    color: var(--primary-color);
+    font-family: 'VT323', monospace;
+    overflow-x: hidden;
+    min-height: 100vh;
+    transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+/* Default theme body styling */
+:not([data-theme]) body,
+[data-theme=""] body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', sans-serif;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Default theme - remove text shadows and use clear fonts for all elements */
+:not([data-theme]) * {
+    font-family: inherit !important;
+}
+
+:not([data-theme]) .theme-btn,
+:not([data-theme]) .pipboy-header,
+:not([data-theme]) .key-label,
+:not([data-theme]) .key-hint,
+:not([data-theme]) .controls-row,
+body:not([data-theme]) .theme-btn,
+body:not([data-theme]) .pipboy-header,
+body:not([data-theme]) .key-label,
+body:not([data-theme]) .key-hint,
+body:not([data-theme]) .controls-row {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', sans-serif;
+    text-shadow: none;
+}
+
+/* ===========================================
+   THEME SWITCHER
+   =========================================== */
+.theme-switcher {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    z-index: 2000;
+    display: flex;
+    gap: 8px;
+    background: var(--background-overlay);
+    padding: 10px 15px;
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
+    box-shadow: var(--border-glow);
+    transition: all 0.3s ease;
+}
+
+/* Default theme switcher styling */
+:not([data-theme]) .theme-switcher,
+body:not([data-theme]) .theme-switcher {
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    background: rgba(15, 20, 25, 0.85);
+    box-shadow: 0 2px 16px rgba(0, 212, 255, 0.1);
+}
+
+.theme-btn {
+    padding: 8px 16px;
+    border: 2px solid var(--primary-color);
+    background: var(--primary-dark);
+    color: var(--primary-color);
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.theme-btn:hover {
+    background: var(--primary-medium);
+    box-shadow: 0 0 15px var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.theme-btn.active {
+    background: var(--primary-color);
+    color: var(--background-color);
+    box-shadow: 0 0 20px var(--primary-color), inset 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* Default theme button styling */
+#defaultTheme {
+    border-color: #00d4ff;
+    color: #00d4ff;
+    background: rgba(0, 212, 255, 0.1);
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    letter-spacing: 0px;
+    text-transform: none;
+}
+
+#defaultTheme:hover {
+    background: rgba(0, 212, 255, 0.2);
+    box-shadow: 0 2px 16px rgba(0, 212, 255, 0.3);
+    border-color: #00d4ff;
+}
+
+#defaultTheme.active {
+    background: #00d4ff;
+    color: #0f1419;
+    box-shadow: 0 2px 16px rgba(0, 212, 255, 0.5);
+    border-color: #00d4ff;
+}
+
+/* Pipboy button in default theme */
+:not([data-theme]) #pipboyTheme,
+body:not([data-theme]) #pipboyTheme {
+    border-color: #1eff00;
+    color: #1eff00;
+    background: rgba(30, 255, 0, 0.1);
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    letter-spacing: 0px;
+    text-transform: none;
+}
+
+:not([data-theme]) #pipboyTheme:hover,
+body:not([data-theme]) #pipboyTheme:hover {
+    background: rgba(30, 255, 0, 0.2);
+    box-shadow: 0 2px 16px rgba(30, 255, 0, 0.25);
+    border-color: #1eff00;
+}
+
+/* Stranger Things specific button styling */
+.theme-btn.stranger-btn {
+    border-color: #ff1d1d;
+    color: #ff1d1d;
+}
+
+.theme-btn.stranger-btn:hover {
+    box-shadow: 0 0 15px #ff1d1d;
+}
+
+/* Stranger button in default theme */
+:not([data-theme]) .theme-btn.stranger-btn,
+body:not([data-theme]) .theme-btn.stranger-btn {
+    border-color: #ff1d1d;
+    color: #ff1d1d;
+    background: rgba(255, 29, 29, 0.1);
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    letter-spacing: 0px;
+    text-transform: none;
+}
+
+:not([data-theme]) .theme-btn.stranger-btn:hover,
+body:not([data-theme]) .theme-btn.stranger-btn:hover {
+    background: rgba(255, 29, 29, 0.2);
+    box-shadow: 0 2px 16px rgba(255, 29, 29, 0.25);
+    border-color: #ff1d1d;
+}
+
+.theme-btn.stranger-btn.active {
+    background: #ff1d1d;
+    color: #000;
+}
+
+/* Stranger button in default theme */
+:not([data-theme]) .theme-btn.stranger-btn,
+body:not([data-theme]) .theme-btn.stranger-btn {
+    border-color: #ff1d1d;
+    color: #ff1d1d;
+    background: #ffffff;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    letter-spacing: 0px;
+    text-transform: none;
+}
+
+:not([data-theme]) .theme-btn.stranger-btn:hover,
+body:not([data-theme]) .theme-btn.stranger-btn:hover {
+    background: #fff0f0;
+    box-shadow: 0 2px 12px rgba(255, 29, 29, 0.2);
+    border-color: #ff1d1d;
+}
+
+/* ===========================================
+   GAME WRAPPER - Desktop & Mobile
+   =========================================== */
+#game-wrapper {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 10;
+    width: fit-content;
+}
+
+/* ===========================================
+   UNITY CONTAINER
+   =========================================== */
+#unity-container {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+#unity-container.unity-desktop {
+    width: 960px;
+    margin: 0 auto;
+}
+
+/* Mobile Unity Container */
+#unity-container.unity-mobile {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    transform: none;
+    z-index: 999;
+}
+
+#unity-canvas {
+    background: #231F20;
+    display: block;
+    transition: all 0.3s ease;
+}
+
+/* Default theme canvas styling */
+:not([data-theme]) #unity-canvas,
+body:not([data-theme]) #unity-canvas {
+    background: #0f1419;
+}
+
+.unity-mobile #unity-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+/* ===========================================
+   LOADING BAR
+   =========================================== */
+#unity-loading-bar {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+}
+
+#unity-logo {
+    width: 154px;
+    height: 130px;
+    background: url('unity-logo-dark.png') no-repeat center;
+}
+
+#unity-progress-bar-empty {
+    width: 141px;
+    height: 18px;
+    margin-top: 10px;
+    margin-left: 6.5px;
+    background: url('progress-bar-empty-dark.png') no-repeat center;
+}
+
+#unity-progress-bar-full {
+    width: 0%;
+    height: 18px;
+    margin-top: 10px;
+    background: url('progress-bar-full-dark.png') no-repeat center;
+}
+
+/* ===========================================
+   FOOTER
+   =========================================== */
+#unity-footer {
+    position: relative;
+    background: #000;
+    border-top: 2px solid var(--primary-color);
+    padding: 10px;
+    margin-top: 0;
+    overflow: hidden;
+    transition: border-color 0.5s ease;
+}
+
+.unity-mobile #unity-footer {
+    display: flex;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    z-index: 2000;
+    pointer-events: none;
+    width: auto;
+}
+
+.unity-mobile #unity-fullscreen-button {
+    display: block;
+    pointer-events: auto;
+    width: 48px;
+    height: 48px;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-radius: 8px;
+    backdrop-filter: blur(4px);
+    margin: 0;
+}
+
+.unity-mobile #unity-logo-title-footer,
+.unity-mobile #unity-build-title {
+    display: none;
+}
+
+#unity-logo-title-footer {
+    float: left;
+    width: 102px;
+    height: 38px;
+    background: url('unity-logo-title-footer.png') no-repeat center;
+    filter: sepia(1) hue-rotate(70deg) saturate(5) brightness(0.8);
+    transition: filter 0.5s ease;
+}
+
+[data-theme="stranger-things"] #unity-logo-title-footer {
+    filter: sepia(1) hue-rotate(-30deg) saturate(5) brightness(0.8);
+}
+
+#unity-build-title {
+    float: right;
+    margin-right: 10px;
+    line-height: 38px;
+    font-family: 'VT323', monospace;
+    font-size: 24px;
+    color: var(--primary-color);
+    text-shadow: var(--text-glow);
+    transition: color 0.5s ease, text-shadow 0.5s ease;
+}
+
+/* ===========================================
+   FULLSCREEN BUTTON - Always visible floating button
+   =========================================== */
+#unity-fullscreen-button {
+    cursor: pointer;
+    position: fixed !important;
+    bottom: 20px;
+    right: 20px;
+    float: none;
+    width: 44px;
+    height: 44px;
+    background: url('fullscreen-button.png') no-repeat center;
+    background-color: rgba(0, 0, 0, 0.7);
+    background-size: 24px;
+    filter: sepia(1) hue-rotate(70deg) saturate(5) brightness(0.8);
+    border: 2px solid var(--primary-color);
+    border-radius: 10px;
+    box-shadow: 0 0 10px var(--primary-color);
+    transition: all 0.3s ease;
+    z-index: 9999 !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+#unity-fullscreen-button:hover {
+    box-shadow: 0 0 20px var(--primary-color), inset 0 0 10px var(--primary-color);
+    transform: scale(1.1);
+}
+
+#unity-fullscreen-button:active {
+    transform: scale(0.95);
+}
+
+[data-theme="stranger-things"] #unity-fullscreen-button {
+    filter: sepia(1) hue-rotate(-30deg) saturate(5) brightness(0.8);
+}
+
+#unity-warning {
+    position: absolute;
+    left: 50%;
+    top: 5%;
+    transform: translate(-50%);
+    background: white;
+    padding: 10px;
+    display: none;
+}
+
+/* ===========================================
+   PIPBOY HEADER
+   =========================================== */
+.pipboy-header {
+    font-size: 60px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    text-shadow: var(--text-glow);
+    letter-spacing: 4px;
+    animation: textFlicker 3s infinite alternate;
+    transition: all 0.5s ease;
+}
+
+/* Default theme header styling */
+:not([data-theme]) .pipboy-header,
+body:not([data-theme]) .pipboy-header {
+    animation: none;
+    text-shadow: none;
+    color: #e0e0e0;
+    letter-spacing: 2px;
+    font-weight: 600;
+}
+
+/* ===========================================
+   PIPBOY BORDER
+   =========================================== */
+.pipboy-border {
+    border: 4px solid var(--primary-color);
+    box-shadow: var(--border-glow), inset 0 0 20px var(--primary-color);
+    padding: 0;
+    background: #000;
+    position: relative;
+    transition: all 0.5s ease;
+}
+
+/* Default theme border styling */
+:not([data-theme]) .pipboy-border,
+body:not([data-theme]) .pipboy-border {
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    box-shadow: 0 2px 16px rgba(0, 212, 255, 0.15);
+    background: rgba(15, 20, 25, 0.6);
+    padding: 0;
+}
+
+:not([data-theme]) .pipboy-border::before,
+body:not([data-theme]) .pipboy-border::before {
+    display: none;
+}
+
+.pipboy-border::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    right: -6px;
+    bottom: -6px;
+    border: 2px solid var(--primary-color);
+    pointer-events: none;
+    z-index: 1;
+    box-shadow: 0 0 10px var(--primary-color);
+    transition: all 0.5s ease;
+}
+
+/* ===========================================
+   CONTROLS PANEL
+   =========================================== */
+.pipboy-controls {
+    margin-top: 25px;
+    font-size: 20px;
+    text-shadow: 0 0 5px var(--primary-color);
+    border: 2px solid var(--primary-color);
+    padding: 20px;
+    background: var(--background-overlay);
+    box-shadow: 0 0 15px var(--primary-color);
+    width: 100%;
+    box-sizing: border-box;
+    transition: all 0.5s ease;
+}
+
+/* Default theme controls styling */
+:not([data-theme]) .pipboy-controls,
+body:not([data-theme]) .pipboy-controls {
+    border: 1px solid rgba(0, 212, 255, 0.25);
+    padding: 20px;
+    background: rgba(15, 20, 25, 0.6);
+    box-shadow: 0 2px 16px rgba(0, 212, 255, 0.1);
+    text-shadow: none;
+    color: #e0e0e0;
+}
+
+.controls-row {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin: 10px 0;
+    flex-wrap: wrap;
+}
+
+.key-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 15px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.key-group::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(var(--primary-color), 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.key-group:hover::before {
+    left: 100%;
+}
+
+.key-group:hover {
+    border-color: var(--primary-color);
+    background: rgba(30, 255, 0, 0.1);
+    box-shadow: 0 0 10px rgba(30, 255, 0, 0.3);
+}
+
+/* Default theme key-group styling */
+:not([data-theme]) .key-group:hover,
+body:not([data-theme]) .key-group:hover {
+    border-color: #00d4ff;
+    background: rgba(0, 212, 255, 0.08);
+    box-shadow: 0 2px 12px rgba(0, 212, 255, 0.2);
+}
+
+[data-theme="stranger-things"] .key-group:hover {
+    background: rgba(255, 29, 29, 0.1);
+    box-shadow: 0 0 10px rgba(255, 29, 29, 0.3);
+}
+
+.key-group.key-active {
+    background: rgba(30, 255, 0, 0.3);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 20px var(--primary-color), inset 0 0 10px rgba(30, 255, 0, 0.3);
+    animation: keyPulse 0.3s ease;
+}
+
+/* Default theme key-active styling */
+:not([data-theme]) .key-group.key-active,
+body:not([data-theme]) .key-group.key-active {
+    background: rgba(0, 212, 255, 0.15);
+    border-color: #00d4ff;
+    box-shadow: 0 2px 12px rgba(0, 212, 255, 0.3);
+    animation: none;
+}
+
+[data-theme="stranger-things"] .key-group.key-active {
+    background: rgba(255, 29, 29, 0.3);
+    box-shadow: 0 0 20px #ff1d1d, inset 0 0 10px rgba(255, 29, 29, 0.3);
+}
+
+.key-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    background: linear-gradient(180deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
+    border: 2px solid var(--primary-color);
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 18px;
+    min-width: 30px;
+    text-align: center;
+    box-shadow: 0 0 5px var(--primary-color), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* Default theme key-badge styling */
+:not([data-theme]) .key-badge,
+body:not([data-theme]) .key-badge {
+    background: rgba(0, 212, 255, 0.12);
+    border: 1px solid rgba(0, 212, 255, 0.4);
+    border-radius: 4px;
+    color: #00d4ff;
+    box-shadow: 0 2px 8px rgba(0, 212, 255, 0.15);
+    font-size: 16px;
+    padding: 6px 14px;
+}
+
+.key-group:hover .key-badge {
+    box-shadow: 0 0 15px var(--primary-color), inset 0 0 5px rgba(30, 255, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+.key-group.key-active .key-badge {
+    background: linear-gradient(180deg, var(--primary-light) 0%, var(--primary-medium) 100%);
+    box-shadow: 0 0 20px var(--primary-color), inset 0 0 10px rgba(30, 255, 0, 0.5);
+}
+
+[data-theme="stranger-things"] .key-group.key-active .key-badge {
+    box-shadow: 0 0 20px #ff1d1d, inset 0 0 10px rgba(255, 29, 29, 0.5);
+}
+
+.pulse-badge {
+    animation: pulseBadge 2s ease-in-out infinite;
+}
+
+/* Default theme pulse badge styling */
+:not([data-theme]) .pulse-badge,
+body:not([data-theme]) .pulse-badge {
+    animation: none;
+}
+
+.key-label {
+    color: var(--primary-color);
+    font-size: 18px;
+    text-shadow: 0 0 3px var(--primary-color);
+    transition: all 0.3s ease;
+}
+
+/* Default theme key-label styling */
+:not([data-theme]) .key-label,
+body:not([data-theme]) .key-label {
+    color: #e0e0e0;
+    text-shadow: none;
+    font-size: 16px;
+}
+
+/* ===========================================
+   KEY HINT POPUP
+   =========================================== */
+.key-hint {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: var(--background-overlay);
+    border: 2px solid var(--primary-color);
+    padding: 15px 30px;
+    font-size: 28px;
+    color: var(--primary-color);
+    text-shadow: var(--text-glow);
+    box-shadow: var(--border-glow);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    letter-spacing: 2px;
+}
+
+/* Default theme key-hint styling */
+:not([data-theme]) .key-hint,
+body:not([data-theme]) .key-hint {
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    background: rgba(15, 20, 25, 0.9);
+    color: #00d4ff;
+    text-shadow: none;
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.2);
+    letter-spacing: 1px;
+}
+
+.key-hint.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    animation: hintGlow 0.5s ease;
+}
+
+/* ===========================================
+   VOICE CHAT RIPPLE
+   =========================================== */
+.voice-ripple {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 50px;
+    height: 50px;
+    border: 3px solid var(--primary-color);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: rippleExpand 1s ease-out forwards;
+    pointer-events: none;
+    z-index: 100;
+}
+
+/* Default theme voice ripple styling */
+:not([data-theme]) .voice-ripple,
+body:not([data-theme]) .voice-ripple {
+    border-color: #00d4ff;
+}
+
+/* ===========================================
+   SCANLINES & CRT EFFECT
+   =========================================== */
+.scanlines {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom,
+            rgba(255, 255, 255, 0),
+            rgba(255, 255, 255, 0) 50%,
+            rgba(0, 0, 0, 0.15) 50%,
+            rgba(0, 0, 0, 0.15));
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 100;
+    animation: scroll var(--scanline-speed) linear infinite;
+    will-change: background-position;
+    transform: translateZ(0);
+    opacity: 1;
+}
+
+/* Hide scanlines in default theme */
+:not([data-theme]) .scanlines,
+body:not([data-theme]) .scanlines {
+    opacity: 0;
+    animation: none;
+    pointer-events: none;
+}
+
+.scanlines::after {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: radial-gradient(circle, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.4) 100%);
+    pointer-events: none;
+}
+
+/* ===========================================
+   ANIMATIONS
+   =========================================== */
+@keyframes scroll {
+    0% {
+        background-position: 0 0;
+    }
+
+    100% {
+        background-position: 0 100%;
+    }
+}
+
+@keyframes textFlicker {
+    0% {
+        opacity: 1;
+        text-shadow: var(--text-glow);
+    }
+
+    50% {
+        opacity: 0.8;
+        text-shadow: 0 0 5px var(--primary-color);
+    }
+
+    100% {
+        opacity: 1;
+        text-shadow: 0 0 15px var(--primary-color);
+    }
+}
+
+@keyframes keyPulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes pulseBadge {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px var(--primary-color);
+    }
+
+    50% {
+        box-shadow: 0 0 20px var(--primary-color), 0 0 30px rgba(var(--primary-color), 0.5);
+    }
+}
+
+@keyframes rippleExpand {
+    0% {
+        width: 50px;
+        height: 50px;
+        opacity: 1;
+    }
+
+    100% {
+        width: 300px;
+        height: 300px;
+        opacity: 0;
+    }
+}
+
+@keyframes hintGlow {
+    0% {
+        box-shadow: 0 0 10px var(--primary-color);
+    }
+
+    50% {
+        box-shadow: 0 0 40px var(--primary-color), 0 0 60px rgba(var(--primary-color), 0.3);
+    }
+
+    100% {
+        box-shadow: var(--border-glow);
+    }
+}
+
+/* ===========================================
+   MOBILE RESPONSIVE STYLES
+   =========================================== */
+@media screen and (max-width: 1024px) {
+    #game-wrapper {
+        position: relative;
+        transform: none;
+        left: 0;
+        top: 0;
+        padding: 15px;
+        margin-top: 80px;
+        /* Space for theme switcher */
+    }
+
+    .pipboy-header {
+        font-size: 36px;
+        letter-spacing: 2px;
+    }
+
+    #unity-container.unity-desktop {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    #unity-canvas {
+        width: 100% !important;
+        height: auto !important;
+        aspect-ratio: 16/10;
+        max-height: 60vh;
+    }
+
+    /* Hide theme switcher and controls - only fullscreen button visible */
+    .theme-switcher,
+    .pipboy-controls {
+        display: none !important;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    body {
+        overflow: hidden;
+        /* Prevent scrolling on mobile */
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        /* Safe area support for notched phones */
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    /* Make game fullscreen on mobile */
+    #game-wrapper {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        transform: none !important;
+        z-index: 1;
+    }
+
+    /* Hide decorative elements on mobile for fullscreen game */
+    .pipboy-header,
+    .pipboy-border::before {
+        display: none !important;
+    }
+
+    .pipboy-border {
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    #unity-container.unity-desktop {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+    }
+
+    #unity-canvas {
+        width: 100% !important;
+        height: 100% !important;
+        max-height: none !important;
+        aspect-ratio: unset !important;
+    }
+
+    /* Controls overlay - compact and at bottom */
+    .pipboy-controls {
+        position: fixed;
+        bottom: 20px;
+        bottom: calc(20px + env(safe-area-inset-bottom));
+        /* Safe area for home indicator */
+        left: 50%;
+        transform: translateX(-50%);
+        width: auto;
+        max-width: 90%;
+        margin: 0;
+        padding: 8px 12px;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid var(--primary-color);
+        border-radius: 12px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        pointer-events: auto;
+        z-index: 1500;
+        display: flex;
+        justify-content: center;
+    }
+
+    .controls-row {
+        gap: 6px;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: center;
+        width: auto;
+    }
+
+    /* Only show first row on mobile */
+    .controls-row:nth-child(2) {
+        display: none;
+    }
+
+    .key-group {
+        width: auto;
+        min-width: 44px;
+        /* Minimum touch target size */
+        min-height: 44px;
+        flex: 0 0 auto;
+        justify-content: center;
+        align-items: center;
+        padding: 8px;
+        pointer-events: auto;
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid var(--primary-color);
+        border-radius: 8px;
+        /* GPU acceleration */
+        transform: translateZ(0);
+        will-change: transform, opacity;
+    }
+
+    .key-group:active {
+        transform: translateZ(0) scale(0.95);
+        background: rgba(var(--primary-color), 0.3);
+    }
+
+    /* Hide redundant controls on mobile */
+    .key-group[data-key="W,A,S,D"],
+    .key-group[data-key="Tab"],
+    .key-group[data-key="T"] {
+        display: none !important;
+    }
+
+    .key-badge {
+        font-size: 18px;
+        padding: 4px 6px;
+        min-width: 24px;
+        text-align: center;
+    }
+
+    .key-label {
+        display: none !important;
+        /* Hide labels completely on mobile */
+    }
+
+    /* Theme switcher - minimal and unobtrusive */
+    .theme-switcher {
+        position: fixed;
+        top: 10px;
+        top: calc(10px + env(safe-area-inset-top));
+        left: 50%;
+        transform: translateX(-50%);
+        flex-direction: row;
+        gap: 4px;
+        padding: 4px 6px;
+        width: auto;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid var(--primary-color);
+        border-radius: 8px;
+        z-index: 2000;
+    }
+
+    .theme-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+        min-height: 32px;
+        border-radius: 4px;
+    }
+
+    /* Footer - hide or minimal */
+    #unity-footer {
+        display: none !important;
+    }
+
+    /* Fullscreen button - floating */
+    .unity-mobile #unity-footer {
+        display: block !important;
+        position: fixed;
+        bottom: 20px;
+        bottom: calc(20px + env(safe-area-inset-bottom));
+        right: 15px;
+        right: calc(15px + env(safe-area-inset-right));
+        background: transparent;
+        border: none;
+        padding: 0;
+        z-index: 2000;
+        width: auto;
+        pointer-events: none;
+    }
+
+    .unity-mobile #unity-fullscreen-button {
+        display: block;
+        pointer-events: auto;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+        background-color: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-radius: 10px;
+        border: 1px solid var(--primary-color);
+        margin: 0;
+        /* GPU acceleration */
+        transform: translateZ(0);
+    }
+
+    .unity-mobile #unity-fullscreen-button:active {
+        transform: translateZ(0) scale(0.95);
+    }
+
+    /* Hide hint popup on mobile */
+    .key-hint {
+        display: none !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .pipboy-header {
+        font-size: 22px;
+        letter-spacing: 0;
+    }
+
+    .pipboy-controls {
+        padding: 8px;
+        font-size: 16px;
+    }
+
+    .key-badge {
+        padding: 6px 10px;
+        font-size: 16px;
+        min-width: 25px;
+    }
+
+    .key-label {
+        font-size: 14px;
+    }
+
+    .key-group {
+        padding: 8px 12px;
+    }
+
+    .key-hint {
+        display: none !important;
+    }
+
+    /* Hide theme switcher and controls at small sizes */
+    .theme-switcher,
+    .pipboy-controls {
+        display: none !important;
+    }
+
+    .theme-btn {
+        display: none;
+    }
+
+    /* Hide footer elements but fullscreen button stays visible (it's fixed positioned) */
+    #unity-footer {
+        display: none !important;
+    }
+
+    #unity-logo-title-footer {
+        display: none;
+    }
+
+    #unity-build-title {
+        font-size: 14px;
+        float: none;
+        margin: 0;
+        flex: 1;
+        text-align: center;
+    }
+
+    #unity-fullscreen-button {
+        float: none;
+        margin: 0;
+    }
+}
+
+/* Landscape mobile specific */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    #game-wrapper {
+        margin-top: 0;
+    }
+
+    .pipboy-header {
+        display: none;
+    }
+
+    .pipboy-controls {
+        display: none;
+    }
+
+    .theme-switcher {
+        display: none !important;
+    }
+
+    /* Always show fullscreen button */
+    .unity-mobile #unity-footer,
+    #unity-footer {
+        display: block !important;
+        position: fixed !important;
+        bottom: 10px !important;
+        right: 10px !important;
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        z-index: 2000 !important;
+        width: auto !important;
+        pointer-events: none;
+    }
+
+    .unity-mobile #unity-fullscreen-button,
+    #unity-fullscreen-button {
+        display: block !important;
+        pointer-events: auto;
+        width: 40px !important;
+        height: 40px !important;
+        background-color: rgba(0, 0, 0, 0.7) !important;
+        border-radius: 8px !important;
+        border: 1px solid var(--primary-color) !important;
+    }
+
+    .unity-mobile #unity-logo-title-footer,
+    .unity-mobile #unity-build-title,
+    #unity-logo-title-footer,
+    #unity-build-title {
+        display: none !important;
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    .key-group {
+        padding: 12px 20px;
+        min-height: 50px;
+    }
+
+    .key-badge {
+        padding: 10px 18px;
+        font-size: 22px;
+    }
+
+    .theme-btn {
+        padding: 12px 20px;
+        font-size: 16px;
+        min-height: 44px;
+    }
+
+    .key-group::before {
+        display: none;
+        /* Remove hover effects on touch */
+    }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+    .pipboy-border {
+        border-width: 2px;
+    }
+
+    .scanlines {
+        background-size: 100% 2px;
+    }
+}
+
+/* ===========================================
+   STRANGER THINGS SPECIAL EFFECTS
+   =========================================== */
+/* Neon Pulse Effect for Stranger Things - Optimized */
+[data-theme="stranger-things"] .pipboy-header {
+    position: relative;
+    font-family: 'Times New Roman', serif;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 900;
+    -webkit-text-stroke: 1px #ff1d1d;
+    color: transparent;
+    text-shadow: 0 0 10px rgba(255, 29, 29, 0.8);
+    animation: neonPulse 6s infinite alternate;
+    will-change: text-shadow, opacity;
+}
+
+[data-theme="stranger-things"] .voice-ripple {
+    border-color: #ff1d1d;
+    box-shadow: 0 0 10px #ff1d1d;
+}
+
+/* Christmas Lights */
+.christmas-lights {
+    display: none;
+    position: absolute;
+    top: -20px;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    z-index: 5;
+    justify-content: center;
+    gap: 30px;
+    pointer-events: none;
+}
+
+[data-theme="stranger-things"] .christmas-lights {
+    display: flex;
+}
+
+.light-bulb {
+    width: 12px;
+    height: 24px;
+    border-radius: 50%;
+    position: relative;
+    animation: lightSway 4s ease-in-out infinite alternate;
+    transform-origin: top center;
+    will-change: transform, opacity;
+}
+
+.light-bulb::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 8px;
+    background: #222;
+}
+
+/* Wire */
+.light-bulb::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -15px;
+    width: 30px;
+    height: 15px;
+    border-bottom: 2px solid #222;
+    border-radius: 50%;
+    z-index: -1;
+}
+
+.light-bulb.red {
+    background: #ff1d1d;
+    box-shadow: 0 0 10px #ff1d1d;
+    animation-delay: 0s;
+}
+
+.light-bulb.green {
+    background: #00ff00;
+    box-shadow: 0 0 10px #00ff00;
+    animation-delay: 0.5s;
+}
+
+.light-bulb.yellow {
+    background: #ffff00;
+    box-shadow: 0 0 10px #ffff00;
+    animation-delay: 1s;
+}
+
+.light-bulb.blue {
+    background: #00ffff;
+    box-shadow: 0 0 10px #00ffff;
+    animation-delay: 1.5s;
+}
+
+/* Blinking effect - Simplified */
+[data-theme="stranger-things"] .light-bulb {
+    animation: lightBlink 3s infinite alternate, lightSway 5s ease-in-out infinite alternate;
+}
+
+@keyframes lightBlink {
+    0%, 100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes lightSway {
+    0% {
+        transform: rotate(-3deg);
+    }
+    100% {
+        transform: rotate(3deg);
+    }
+}
+
+/* Remove the old glitch effect and replace with a subtle flicker overlay if needed, 
+   but the main neon pulse is usually enough. 
+   We'll add a subtle "bad connection" flicker overlay. */
+[data-theme="stranger-things"] .pipboy-header::before {
+    content: 'Rowan University';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    color: #fff;
+    filter: blur(2px);
+    animation: badConnection 5s infinite;
+    pointer-events: none;
+    z-index: 2;
+}
+
+@keyframes neonPulse {
+    0%, 100% {
+        text-shadow: 0 0 10px rgba(255, 29, 29, 0.8);
+        opacity: 1;
+    }
+    50% {
+        text-shadow: 0 0 6px rgba(255, 29, 29, 0.6);
+        opacity: 0.9;
+    }
+}
+
+@keyframes badConnection {
+    0%, 100% {
+        opacity: 0;
+    }
+    2% {
+        opacity: 0.3;
+    }
+    3% {
+        opacity: 0;
+    }
+    55% {
+        opacity: 0;
+    }
+    56% {
+        opacity: 0.2;
+    }
+    57% {
+        opacity: 0;
+    }
+}
+
+/* Dark particle effect & Vignette - Simplified */
+[data-theme="stranger-things"]::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, transparent 50%, rgba(0, 0, 0, 0.6) 100%);
+    pointer-events: none;
+    z-index: 50;
+    will-change: opacity;
+}
+
+/* Floating Blood Cells */
+.blood-cells-container {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    /* Behind UI but in front of background */
+    overflow: hidden;
+}
+
+[data-theme="stranger-things"] .blood-cells-container {
+    display: block;
+}
+
+.blood-cell {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #ff4d4d, #8b0000);
+    box-shadow: inset -3px -3px 6px rgba(0, 0, 0, 0.4), 0 0 8px rgba(139, 0, 0, 0.2);
+    opacity: 0.5;
+    animation: floatUp 20s linear infinite;
+    will-change: transform, opacity;
+    transform: translateZ(0);
+}
+
+/* Indent in the middle to look like a blood cell */
+.blood-cell::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%;
+    height: 60%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.2), transparent);
+}
+
+.blood-cell:nth-child(1) {
+    width: 50px;
+    height: 50px;
+    left: 20%;
+    bottom: -50px;
+    animation-duration: 20s;
+    animation-delay: 0s;
+}
+
+.blood-cell:nth-child(2) {
+    width: 40px;
+    height: 40px;
+    left: 50%;
+    bottom: -40px;
+    animation-duration: 25s;
+    animation-delay: 5s;
+}
+
+.blood-cell:nth-child(3) {
+    width: 45px;
+    height: 45px;
+    left: 80%;
+    bottom: -45px;
+    animation-duration: 22s;
+    animation-delay: 10s;
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translateY(0) translateZ(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.5;
+    }
+    90% {
+        opacity: 0.5;
+    }
+    100% {
+        transform: translateY(-110vh) translateZ(0);
+        opacity: 0;
+    }
+}
+
+/* ===========================================
+   MOBILE PERFORMANCE OPTIMIZATIONS
+   =========================================== */
+@media screen and (max-width: 768px) {
+
+    /* Disable expensive effects on mobile */
+    [data-theme="stranger-things"]::after,
+    /* Vignette */
+    [data-theme="stranger-things"] .blood-cells-container,
+    /* Particles */
+    [data-theme="stranger-things"] .pipboy-header::before,
+    /* Text Blur Overlay */
+    [data-theme="stranger-things"] .pipboy-header::after {
+        /* Header Lights Glow */
+        display: none !important;
+    }
+
+    /* Simplify Christmas lights to be static or removed if too heavy */
+    [data-theme="stranger-things"] .christmas-lights {
+        display: flex;
+        opacity: 0.8;
+        top: 50px;
+        /* Move down slightly */
+    }
+
+    [data-theme="stranger-things"] .light-bulb {
+        animation: none !important;
+        box-shadow: none !important;
+        filter: none !important;
+    }
+
+    /* Reduce text shadow complexity */
+    [data-theme="stranger-things"] .pipboy-header {
+        text-shadow: 2px 2px 0px #ff1d1d !important;
+        animation: none !important;
+        -webkit-text-stroke: 0;
+    }
+
+    /* Disable scanlines on mobile */
+    .scanlines {
+        display: none;
+    }
+}

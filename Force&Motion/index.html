@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Unity Web Player | Force and Motion</title>
+  <link rel="shortcut icon" href="TemplateData/favicon.ico">
+  <link rel="stylesheet" href="TemplateData/style.css?v=2.0">
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <!-- Theme Switcher -->
+  <div class="theme-switcher" id="themeSwitcher">
+    <button class="theme-btn active" id="defaultTheme" onclick="setTheme('default')">🎮 默认</button>
+    <button class="theme-btn" id="pipboyTheme" onclick="setTheme('pipboy')">☢️ Pip-Boy</button>
+    <button class="theme-btn stranger-btn" id="strangerTheme" onclick="setTheme('stranger-things')">🔴 Stranger</button>
+  </div>
+
+  <div class="scanlines"></div>
+  <div class="christmas-lights">
+    <div class="light-bulb red"></div>
+    <div class="light-bulb green"></div>
+    <div class="light-bulb yellow"></div>
+    <div class="light-bulb blue"></div>
+    <div class="light-bulb red"></div>
+    <div class="light-bulb green"></div>
+    <div class="light-bulb yellow"></div>
+    <div class="light-bulb blue"></div>
+  </div>
+
+  <div class="blood-cells-container">
+    <div class="blood-cell"></div>
+    <div class="blood-cell"></div>
+    <div class="blood-cell"></div>
+  </div>
+
+  <div id="game-wrapper">
+    <div class="pipboy-header">Rowan University</div>
+    <div id="unity-container" class="unity-desktop pipboy-border">
+      <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
+        </div>
+      </div>
+      <div id="unity-warning"> </div>
+      <div id="unity-footer">
+        <div id="unity-logo-title-footer"></div>
+        <div id="unity-fullscreen-button"></div>
+        <div id="unity-build-title">Force and Motion</div>
+      </div>
+    </div>
+    <div class="pipboy-controls">
+      <div class="controls-row">
+        <div class="key-group" data-key="W,A,S,D">
+          <span class="key-badge">WASD</span>
+          <span class="key-label">Move</span>
+        </div>
+        <div class="key-group" data-key="F">
+          <span class="key-badge">F</span>
+          <span class="key-label">Get on/off car</span>
+        </div>
+        <div class="key-group" data-key="Tab">
+          <span class="key-badge">Tab</span>
+          <span class="key-label">Hide/Show Cursor</span>
+        </div>
+      </div>
+      <div class="controls-row">
+        <div class="key-group" data-key="V">
+          <span class="key-badge pulse-badge">V</span>
+          <span class="key-label">Voice Chat</span>
+        </div>
+        <div class="key-group" data-key="J">
+          <span class="key-badge">J</span>
+          <span class="key-label">Objective List</span>
+        </div>
+        <div class="key-group" data-key="K">
+          <span class="key-badge">K</span>
+          <span class="key-label">Objective Track</span>
+        </div>
+      </div>
+    </div>
+    <div class="key-hint" id="keyHint"></div>
+  </div>
+  <script>
+    var canvas = document.querySelector("#unity-canvas");
+
+    // Shows a temporary message banner/ribbon for a few seconds, or
+    // a permanent error message on top of the canvas if type=='error'.
+    // If type=='warning', a yellow highlight color is used.
+    // Modify or remove this function to customize the visually presented
+    // way that non-critical warnings and error messages are presented to the
+    // user.
+    function unityShowBanner(msg, type) {
+      var warningBanner = document.querySelector("#unity-warning");
+      function updateBannerVisibility() {
+        warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+      }
+      var div = document.createElement('div');
+      div.innerHTML = msg;
+      warningBanner.appendChild(div);
+      if (type == 'error') div.style = 'background: red; padding: 10px;';
+      else {
+        if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+        setTimeout(function () {
+          warningBanner.removeChild(div);
+          updateBannerVisibility();
+        }, 5000);
+      }
+      updateBannerVisibility();
+    }
+
+    var buildUrl = "Build";
+    var loaderUrl = buildUrl + "/20251122DrivingBuild.loader.js";
+    var config = {
+      arguments: [],
+      dataUrl: buildUrl + "/20251122DrivingBuild.data",
+      frameworkUrl: buildUrl + "/20251122DrivingBuild.framework.js",
+      codeUrl: buildUrl + "/20251122DrivingBuild.wasm",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "DefaultCompany",
+      productName: "Force and Motion",
+      productVersion: "0.1.0",
+      showBanner: unityShowBanner,
+      // errorHandler: function(err, url, line) {
+      //    alert("error " + err + " occurred at line " + line);
+      //    // Return 'true' if you handled this error and don't want Unity
+      //    // to process it further, 'false' otherwise.
+      //    return true;
+      // },
+    };
+
+    // By default, Unity keeps WebGL canvas render target size matched with
+    // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+    // Set this to false if you want to decouple this synchronization from
+    // happening inside the engine, and you would instead like to size up
+    // the canvas DOM size and WebGL render target sizes yourself.
+    // config.matchWebGLToCanvasSize = false;
+
+    // If you would like all file writes inside Unity Application.persistentDataPath
+    // directory to automatically persist so that the contents are remembered when
+    // the user revisits the site the next time, uncomment the following line:
+    // config.autoSyncPersistentDataPath = true;
+    // This autosyncing is currently not the default behavior to avoid regressing
+    // existing user projects that might rely on the earlier manual
+    // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
+    // expected to change.
+
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      // Mobile device style: fill the whole browser client area with the game canvas:
+
+      var meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes, viewport-fit=cover';
+      document.getElementsByTagName('head')[0].appendChild(meta);
+      document.querySelector("#unity-container").className = "unity-mobile";
+      canvas.className = "unity-mobile";
+
+      // Try to lock to landscape orientation for better gameplay
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(function (e) {
+          // Orientation lock not supported or denied, that's okay
+          console.log('Orientation lock not available');
+        });
+      }
+
+    } else {
+      // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
+      canvas.style.width = "960px";
+      canvas.style.height = "600px";
+    }
+
+    document.querySelector("#unity-loading-bar").style.display = "block";
+
+    var script = document.createElement("script");
+    script.src = loaderUrl;
+    script.onload = () => {
+      createUnityInstance(canvas, config, (progress) => {
+        document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
+      }).then((unityInstance) => {
+        document.querySelector("#unity-loading-bar").style.display = "none";
+        document.querySelector("#unity-fullscreen-button").onclick = () => {
+          unityInstance.SetFullscreen(1);
+        };
+
+      }).catch((message) => {
+        alert(message);
+      });
+    };
+
+    document.body.appendChild(script);
+
+  </script>
+  <script>
+    // Interactive key press effects
+    document.addEventListener('keydown', function (e) {
+      const key = e.key.toUpperCase();
+      const keyHint = document.getElementById('keyHint');
+      const keyGroups = document.querySelectorAll('.key-group');
+
+      // Find matching key group
+      keyGroups.forEach(group => {
+        const keys = group.getAttribute('data-key').split(',');
+        if (keys.includes(key) || keys.includes(e.key)) {
+          group.classList.add('key-active');
+
+          // Show hint message
+          const label = group.querySelector('.key-label').textContent;
+          keyHint.textContent = '[ ' + label + ' ]';
+          keyHint.classList.add('show');
+
+          setTimeout(() => {
+            keyHint.classList.remove('show');
+          }, 1500);
+        }
+      });
+
+      // Special effect for voice chat
+      if (key === 'V') {
+        createRippleEffect();
+      }
+    });
+
+    document.addEventListener('keyup', function (e) {
+      const key = e.key.toUpperCase();
+      const keyGroups = document.querySelectorAll('.key-group');
+
+      keyGroups.forEach(group => {
+        const keys = group.getAttribute('data-key').split(',');
+        if (keys.includes(key) || keys.includes(e.key)) {
+          group.classList.remove('key-active');
+        }
+      });
+    });
+
+    // Ripple effect for voice chat
+    function createRippleEffect() {
+      const wrapper = document.getElementById('game-wrapper');
+      for (let i = 0; i < 3; i++) {
+        setTimeout(() => {
+          const ripple = document.createElement('div');
+          ripple.className = 'voice-ripple';
+          wrapper.appendChild(ripple);
+          setTimeout(() => ripple.remove(), 1000);
+        }, i * 200);
+      }
+    }
+
+    // Hover sound effect simulation (visual feedback)
+    document.querySelectorAll('.key-group').forEach(group => {
+      group.addEventListener('mouseenter', function () {
+        this.style.transform = 'scale(1.05)';
+      });
+      group.addEventListener('mouseleave', function () {
+        this.style.transform = 'scale(1)';
+      });
+      group.addEventListener('click', function () {
+        this.classList.add('key-active');
+        setTimeout(() => this.classList.remove('key-active'), 200);
+      });
+    });
+  </script>
+
+  <!-- Theme Switching Script -->
+  <script>
+    // Theme Management
+    const themes = {
+      'default': {
+        name: 'Default',
+        dataTheme: null // Default, no data-theme attribute
+      },
+      'pipboy': {
+        name: 'Pip-Boy',
+        dataTheme: 'pipboy'
+      },
+      'stranger-things': {
+        name: 'Stranger Things',
+        dataTheme: 'stranger-things'
+      }
+    };
+
+    // Set theme function
+    function setTheme(themeName) {
+      const html = document.documentElement;
+      const body = document.body;
+
+      // Remove existing theme
+      html.removeAttribute('data-theme');
+      body.removeAttribute('data-theme');
+
+      // Apply new theme
+      if (themes[themeName] && themes[themeName].dataTheme) {
+        html.setAttribute('data-theme', themes[themeName].dataTheme);
+        body.setAttribute('data-theme', themes[themeName].dataTheme);
+      }
+
+      // Update button states
+      document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+
+      if (themeName === 'default') {
+        document.getElementById('defaultTheme').classList.add('active');
+      } else if (themeName === 'pipboy') {
+        document.getElementById('pipboyTheme').classList.add('active');
+      } else if (themeName === 'stranger-things') {
+        document.getElementById('strangerTheme').classList.add('active');
+      }
+
+      // Save preference
+      localStorage.setItem('preferred-theme', themeName);
+
+      // Trigger theme change event for any listeners
+      window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: themeName } }));
+
+      // Visual feedback
+      createThemeTransition();
+    }
+
+    // Create visual transition effect when changing themes
+    function createThemeTransition() {
+      const flash = document.createElement('div');
+      flash.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        opacity: 0.1;
+        pointer-events: none;
+        z-index: 9999;
+        animation: themeFlash 0.3s ease-out forwards;
+      `;
+      document.body.appendChild(flash);
+      setTimeout(() => flash.remove(), 300);
+    }
+
+    // Add flash animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes themeFlash {
+        0% { opacity: 0.15; }
+        100% { opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Load saved theme on page load
+    function loadSavedTheme() {
+      const savedTheme = localStorage.getItem('preferred-theme');
+      if (savedTheme && themes[savedTheme]) {
+        setTheme(savedTheme);
+      } else {
+        setTheme('default'); // Default theme
+      }
+    }
+
+    // Initialize theme on load
+    document.addEventListener('DOMContentLoaded', loadSavedTheme);
+
+    // Also run immediately in case DOM is already loaded
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      loadSavedTheme();
+    }
+
+  </script>
+
+  <!-- Mobile Touch Improvements -->
+  <script>
+    // Detect mobile device
+    function isMobileDevice() {
+      return /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+    }
+
+    // Improve touch interactions on mobile
+    if (isMobileDevice()) {
+      // Add touch feedback to key groups
+      document.querySelectorAll('.key-group').forEach(group => {
+        group.addEventListener('touchstart', function (e) {
+          this.classList.add('key-active');
+        }, { passive: true });
+
+        group.addEventListener('touchend', function (e) {
+          setTimeout(() => this.classList.remove('key-active'), 150);
+        }, { passive: true });
+      });
+
+      // Add touch feedback to theme buttons
+      document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.addEventListener('touchstart', function (e) {
+          this.style.transform = 'scale(0.95)';
+        }, { passive: true });
+
+        btn.addEventListener('touchend', function (e) {
+          this.style.transform = 'scale(1)';
+        }, { passive: true });
+      });
+
+      // Prevent double-tap zoom on buttons
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', function (e) {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+          e.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, false);
+
+      // Add mobile class to body for additional styling hooks
+      document.body.classList.add('is-mobile');
+    }
+
+    // Handle orientation changes
+    window.addEventListener('orientationchange', function () {
+      // Force a layout recalculation after orientation change
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 100);
+    });
+
+    // Handle viewport resize for mobile browsers (address bar hide/show)
+    let vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+
+    window.addEventListener('resize', () => {
+      vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    });
+  </script>
+</body>
+
+</html>

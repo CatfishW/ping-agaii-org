@@ -1,0 +1,274 @@
+.initiatives-page {
+  min-height: 100vh;
+  background: var(--bg-light);
+  padding: 2rem 0;
+}
+
+.initiatives-header {
+  text-align: center;
+  padding: 3rem 0;
+  margin-bottom: 3rem;
+}
+
+.initiatives-header h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.initiatives-header .subtitle {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.initiative-section {
+  margin-bottom: 4rem;
+}
+
+.initiative-section h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.initiatives-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.initiative-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  transition: var(--transition);
+}
+
+.initiative-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.initiative-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.initiative-card h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.initiative-card > p {
+  color: var(--text-color);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.initiative-details {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.initiative-details li {
+  padding: 0.5rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.initiative-details li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--accent-color);
+  font-weight: bold;
+}
+
+/* Collaborations Section */
+.collaboration-section {
+  margin-bottom: 4rem;
+}
+
+.collaboration-section h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.collaboration-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.collaboration-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  text-align: center;
+}
+
+.collaboration-card h4 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.collaboration-card p {
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* Publications Section */
+.publications-section {
+  margin-bottom: 4rem;
+}
+
+.publications-section h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.publications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.publication-item {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+}
+
+.publication-item h4 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.publication-meta {
+  font-size: 0.9rem;
+  color: var(--accent-color);
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.publication-abstract {
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+/* Get Involved Section */
+.get-involved-section {
+  background: white;
+  padding: 3rem;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  text-align: center;
+}
+
+.get-involved-section h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.get-involved-section > p {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  max-width: 600px;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  font-size: 1rem;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #6a1a0f;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(87, 21, 11, 0.3);
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+}
+
+.btn-secondary:hover {
+  background: var(--primary-color);
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .initiatives-header h1 {
+    font-size: 2rem;
+  }
+
+  .initiatives-header .subtitle {
+    font-size: 1rem;
+  }
+
+  .initiatives-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .collaboration-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cta-buttons {
+    flex-direction: column;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+}
