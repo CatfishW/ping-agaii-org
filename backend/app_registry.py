@@ -11,18 +11,11 @@ DEFAULT_APPS = [
         "source_type": "ping"
     },
     {
-        "slug": "lammp",
-        "name": "LAMMP",
-        "description": "LAMMP learning workspace",
-        "base_url": "https://lammp.agaii.org",
-        "source_type": "lammp"
-    },
-    {
-        "slug": "game",
-        "name": "Game Hub",
-        "description": "Simulation distribution portal",
+        "slug": "sparc",
+        "name": "SPARC Web",
+        "description": "SPARC learning experience",
         "base_url": "https://game.agaii.org",
-        "source_type": "game"
+        "source_type": "sparc"
     }
 ]
 

@@ -64,3 +64,27 @@ CREATE TABLE IF NOT EXISTS class_students (
     joined_at TIMESTAMPTZ DEFAULT NOW(),
     CONSTRAINT uq_class_students UNIQUE (class_id, user_id)
 );
+
+CREATE TABLE IF NOT EXISTS sparc_wordgame_scores (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    player_name VARCHAR(255) NOT NULL,
+    score INTEGER DEFAULT 0,
+    scene VARCHAR(255),
+    played_at TIMESTAMPTZ,
+    original_id INTEGER,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS sparc_game_sessions (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    game_slug VARCHAR(255) NOT NULL,
+    score INTEGER DEFAULT 0,
+    completed BOOLEAN DEFAULT FALSE,
+    started_at TIMESTAMPTZ DEFAULT NOW(),
+    ended_at TIMESTAMPTZ,
+    metadata JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ
+);

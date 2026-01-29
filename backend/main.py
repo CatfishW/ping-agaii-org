@@ -12,7 +12,9 @@ from routers import telemetry_router
 from routers import class_router
 from routers import invite_router
 from routers import dashboard_router
+from routers import sparc_router
 from app_registry import ensure_default_apps
+from routers.sparc_router import seed_wordgame_scores
 from auth import get_password_hash
 from sqlalchemy import text
 
@@ -29,6 +31,7 @@ def seed_apps():
         ensure_default_apps(db)
         ensure_admin_user(db)
         ensure_schema_updates()
+        seed_wordgame_scores(db)
     finally:
         db.close()
 
@@ -81,6 +84,7 @@ app.include_router(telemetry_router.router)
 app.include_router(class_router.router)
 app.include_router(invite_router.router)
 app.include_router(dashboard_router.router)
+app.include_router(sparc_router.router)
 
 class Simulation(BaseModel):
     id: str

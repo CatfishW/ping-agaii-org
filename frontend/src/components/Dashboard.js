@@ -79,7 +79,7 @@ const Dashboard = () => {
           </div>
           <h1>Networked Learning Dashboard</h1>
           <p>
-            One read-only control plane for PING, LAMMP, and the game hub. Monitor sessions,
+            One read-only control plane for PING and SPARC Web. Monitor sessions,
             engagement, and data health without touching production workloads.
           </p>
           <div className="hero-meta">

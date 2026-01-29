@@ -247,6 +247,36 @@ class InviteUse(Base):
     user_agent = Column(String, nullable=True)
 
 
+class SparcWordGameScore(Base):
+    __tablename__ = "sparc_wordgame_scores"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    player_name = Column(String, nullable=False)
+    score = Column(Integer, default=0)
+    scene = Column(String, nullable=True)
+    played_at = Column(DateTime(timezone=True), nullable=True)
+    original_id = Column(Integer, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class SparcGameSession(Base):
+    __tablename__ = "sparc_game_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    game_slug = Column(String, nullable=False)
+    score = Column(Integer, default=0)
+    completed = Column(Boolean, default=False)
+    started_at = Column(DateTime(timezone=True), server_default=func.now())
+    ended_at = Column(DateTime(timezone=True), nullable=True)
+    metadata_json = Column("metadata", JSON, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
 class AppStatus(str, enum.Enum):
     ACTIVE = "active"
     MAINTENANCE = "maintenance"
