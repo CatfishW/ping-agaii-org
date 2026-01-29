@@ -309,9 +309,9 @@ async def get_class_students(
         ).count()
         
         # Get last active time
-        last_active = db.query(BehaviorData.created_at).filter(
+        last_active = db.query(BehaviorData.timestamp).filter(
             BehaviorData.user_id == student.id
-        ).order_by(BehaviorData.created_at.desc()).first()
+        ).order_by(BehaviorData.timestamp.desc()).first()
         
         students_data.append({
             "user_id": student.id,
@@ -343,9 +343,9 @@ async def get_class_students(
         ).count()
         
         # Get last active time
-        last_active = db.query(BehaviorData.created_at).filter(
+        last_active = db.query(BehaviorData.timestamp).filter(
             BehaviorData.guest_session_id == guest_id
-        ).order_by(BehaviorData.created_at.desc()).first()
+        ).order_by(BehaviorData.timestamp.desc()).first()
         
         students_data.append({
             "user_id": None,

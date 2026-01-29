@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timedelta
+import json
 import uuid
 import hashlib
 
@@ -86,14 +87,15 @@ async def upload_telemetry_events(
             continue  # Skip non-compliant events
         
         # Create behavior data record
+        payload_data = dict(event.payload)
+        payload_data["anon_id"] = anonymized_id
         behavior_record = BehaviorData(
             user_id=current_user.id if current_user.role != UserRole.GUEST else None,
             guest_session_id=current_user.guest_id if current_user.role == UserRole.GUEST else None,
             module_id=event.module_id,
             session_id=session_id,
             event_type=event.event_type,
-            event_data=event.payload,  # JSON field
-            anonymized_user_id=anonymized_id
+            event_data=json.dumps(payload_data)
         )
         
         db.add(behavior_record)
@@ -170,8 +172,8 @@ async def get_session_stats(
         "session_id": session_id,
         "total_events": len(events),
         "event_types": event_types,
-        "start_time": events[0].created_at.isoformat() if events else None,
-        "end_time": events[-1].created_at.isoformat() if events else None
+        "start_time": events[0].timestamp.isoformat() if events else None,
+        "end_time": events[-1].timestamp.isoformat() if events else None
     }
 
 def validate_event_compliance(event: TelemetryEventCreate) -> bool:
@@ -264,7 +266,7 @@ async def export_user_telemetry_data(
             "module_id": event.module_id,
             "event_type": event.event_type,
             "event_data": event.event_data,
-            "timestamp": event.created_at.isoformat()
+            "timestamp": event.timestamp.isoformat()
         })
     
     return {

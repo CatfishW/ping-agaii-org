@@ -8,6 +8,7 @@ const Header = ({ currentPage, setCurrentPage, setSearchQuery, onLoginClick }) =
   const [showSearch, setShowSearch] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, isAuthenticated, isGuest, logout } = useAuth();
+  const isAdmin = isAuthenticated && user && (user.role === 'org_admin' || user.role === 'platform_admin');
   const userMenuRef = useRef(null);
 
   // 点击外部关闭用户菜单
@@ -65,6 +66,9 @@ const Header = ({ currentPage, setCurrentPage, setSearchQuery, onLoginClick }) =
             </Link>
           </li>
           <li><Link to="/teaching">TEACHING</Link></li>
+          {isAdmin && (
+            <li><Link to="/dashboard">DASHBOARD</Link></li>
+          )}
           <li><Link to="/research">RESEARCH</Link></li>
           <li className="dropdown">
             <Link to="/initiatives">

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, validator
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, date
 from models import UserRole
 
 # User Schemas
@@ -175,3 +175,37 @@ class BehaviorDataResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+
+# Dashboard Schemas
+class DashboardTotals(BaseModel):
+    apps: int
+    users: int
+    sessions: int
+    events: int
+
+
+class DashboardTrendPoint(BaseModel):
+    date: date
+    events: int
+    sessions: int
+
+
+class DashboardAppSummary(BaseModel):
+    slug: str
+    name: str
+    status: str
+    base_url: Optional[str] = None
+    connected: bool
+    users: int
+    sessions: int
+    events: int
+    last_event_at: Optional[datetime] = None
+
+
+class DashboardOverview(BaseModel):
+    totals: DashboardTotals
+    apps: List[DashboardAppSummary]
+    trend: List[DashboardTrendPoint]
+    read_replica: bool
+    generated_at: datetime

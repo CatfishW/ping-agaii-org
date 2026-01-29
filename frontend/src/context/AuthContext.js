@@ -72,7 +72,8 @@ export const AuthProvider = ({ children }) => {
       return {
         success: false,
         error: error.response?.data?.detail || 'Registration failed'
-          }
+      };
+    }
   };
 
   const loginAsGuest = async () => {

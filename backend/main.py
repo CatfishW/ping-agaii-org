@@ -5,16 +5,27 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 import json
 
-from database import engine, get_db
+from database import engine, get_db, SessionLocal
 from models import Base
 from routers import auth_router
 from routers import telemetry_router
 from routers import class_router
+from routers import dashboard_router
+from app_registry import ensure_default_apps
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="PING API", version="2.0.0")
+
+
+@app.on_event("startup")
+def seed_apps():
+    db = SessionLocal()
+    try:
+        ensure_default_apps(db)
+    finally:
+        db.close()
 
 # CORS middleware
 app.add_middleware(
@@ -29,6 +40,7 @@ app.add_middleware(
 app.include_router(auth_router.router)
 app.include_router(telemetry_router.router)
 app.include_router(class_router.router)
+app.include_router(dashboard_router.router)
 
 class Simulation(BaseModel):
     id: str

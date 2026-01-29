@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Enum
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Enum, JSON, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
@@ -194,3 +194,106 @@ class AuditLog(Base):
     
     # Timestamp
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+
+class AppStatus(str, enum.Enum):
+    ACTIVE = "active"
+    MAINTENANCE = "maintenance"
+    DISABLED = "disabled"
+
+
+class App(Base):
+    __tablename__ = "apps"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    base_url = Column(String, nullable=True)
+    status = Column(Enum(AppStatus), default=AppStatus.ACTIVE)
+    api_key_hash = Column(String, nullable=True)
+    source_type = Column(String, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    last_event_at = Column(DateTime(timezone=True), nullable=True)
+    last_seen_at = Column(DateTime(timezone=True), nullable=True)
+
+    sessions = relationship("AppSession", back_populates="app")
+    events = relationship("AppEvent", back_populates="app")
+    metrics = relationship("AppMetricDaily", back_populates="app")
+
+
+class ExternalAccount(Base):
+    __tablename__ = "external_accounts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    provider = Column(String, nullable=False)
+    external_user_id = Column(String, nullable=True)
+    external_email = Column(String, nullable=True)
+    linked_at = Column(DateTime(timezone=True), server_default=func.now())
+    last_seen_at = Column(DateTime(timezone=True), nullable=True)
+
+    user = relationship("User")
+
+    __table_args__ = (
+        UniqueConstraint("provider", "external_user_id", name="uq_external_accounts_provider_user"),
+    )
+
+
+class AppSession(Base):
+    __tablename__ = "app_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    app_id = Column(Integer, ForeignKey("apps.id"), nullable=False)
+    session_id = Column(String, index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    external_user_id = Column(String, nullable=True)
+    metadata = Column(JSON, nullable=True)
+
+    started_at = Column(DateTime(timezone=True), server_default=func.now())
+    ended_at = Column(DateTime(timezone=True), nullable=True)
+    last_event_at = Column(DateTime(timezone=True), nullable=True)
+
+    app = relationship("App", back_populates="sessions")
+
+
+class AppEvent(Base):
+    __tablename__ = "app_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    app_id = Column(Integer, ForeignKey("apps.id"), nullable=False)
+    session_id = Column(String, index=True, nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    external_user_id = Column(String, nullable=True)
+    event_type = Column(String, nullable=False)
+    event_name = Column(String, nullable=True)
+    payload = Column(JSON, nullable=True)
+
+    occurred_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    received_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+    app = relationship("App", back_populates="events")
+
+
+class AppMetricDaily(Base):
+    __tablename__ = "app_metrics_daily"
+
+    id = Column(Integer, primary_key=True, index=True)
+    app_id = Column(Integer, ForeignKey("apps.id"), nullable=False)
+    metric_date = Column(DateTime(timezone=True), nullable=False, index=True)
+
+    active_users = Column(Integer, default=0)
+    new_users = Column(Integer, default=0)
+    sessions = Column(Integer, default=0)
+    events = Column(Integer, default=0)
+    errors = Column(Integer, default=0)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    app = relationship("App", back_populates="metrics")
+
+    __table_args__ = (
+        UniqueConstraint("app_id", "metric_date", name="uq_app_metrics_daily"),
+    )

@@ -12,6 +12,7 @@ import CookiePolicy from './components/CookiePolicy';
 import TeacherDashboard from './components/TeacherDashboard';
 import ClassDetails from './components/ClassDetails';
 import Initiatives from './components/Initiatives';
+import Dashboard from './components/Dashboard';
 import './App.css';
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
             <Route path="/studio" element={<div className="container"><h1>Studio</h1></div>} />
             <Route path="/teaching" element={<TeacherDashboard />} />
             <Route path="/teaching/classes/:classId" element={<ClassDetails />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/research" element={<div className="container"><h1>Research</h1></div>} />
             <Route path="/initiatives" element={<Initiatives />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
