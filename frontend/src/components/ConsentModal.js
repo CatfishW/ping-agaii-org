@@ -14,7 +14,7 @@ const ConsentModal = ({ isOpen, onClose, onConsent, onConsentComplete, required 
   const [loading, setLoading] = useState(false);
   const [showDetails, setShowDetails] = useState(null);
 
-  const { user, submitConsent, loginAsGuest } = useAuth();
+  const { user, submitConsent } = useAuth();
 
   if (!isOpen) return null;
 

@@ -6,10 +6,10 @@ import random
 import string
 
 from database import get_db
-from models import User, Class, Module, BehaviorData, UserRole
+from models import User, Class, Module, BehaviorData, UserRole, ClassStudent
 from schemas import (
     ClassCreate, ClassUpdate, ClassResponse, ClassWithStats,
-    JoinCodeValidate, StudentProgress
+    JoinCodeValidate, JoinClassRequest, StudentProgress
 )
 from routers.auth_router import get_current_user
 
@@ -257,6 +257,45 @@ async def validate_join_code(
         "teacher_name": teacher.full_name if teacher else "Unknown",
         "organization_id": class_obj.organization_id
     }
+
+
+@router.post("/join", response_model=ClassResponse)
+async def join_class(
+    join_data: JoinClassRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only students can join classes"
+        )
+
+    class_obj = db.query(Class).filter(
+        Class.join_code == join_data.join_code,
+        Class.is_active == True
+    ).first()
+
+    if not class_obj:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invalid join code or class is inactive"
+        )
+
+    existing = db.query(ClassStudent).filter(
+        ClassStudent.class_id == class_obj.id,
+        ClassStudent.user_id == current_user.id
+    ).first()
+
+    if not existing:
+        db.add(ClassStudent(
+            class_id=class_obj.id,
+            user_id=current_user.id
+        ))
+        db.commit()
+        db.refresh(class_obj)
+
+    return class_obj
 
 @router.get("/{class_id}/students", response_model=List[StudentProgress])
 async def get_class_students(

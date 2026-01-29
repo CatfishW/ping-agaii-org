@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
+import os
 import uuid
 
 from database import get_db
-from models import User, ConsentRecord, UserRole
+from models import User, ConsentRecord, UserRole, InviteCode, InviteUse, InviteRole, Class, ClassStudent
 from schemas import (
     UserCreate, UserLogin, UserResponse, Token, 
     GuestSessionCreate, GuestSessionResponse,
@@ -15,6 +16,8 @@ from auth import (
     verify_password, get_password_hash, 
     create_access_token, verify_token
 )
+
+from sqlalchemy import or_
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
@@ -53,8 +56,35 @@ async def get_current_user(
 
 # User Registration
 @router.post("/register", response_model=UserResponse)
-async def register_user(user_data: UserCreate, db: Session = Depends(get_db)):
+async def register_user(
+    user_data: UserCreate,
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """Register a new user account"""
+
+    invite = db.query(InviteCode).filter(
+        InviteCode.code == user_data.invite_code,
+        InviteCode.is_active == True
+    ).first()
+
+    if not invite:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid invite code"
+        )
+
+    if invite.expires_at and invite.expires_at < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invite code has expired"
+        )
+
+    if invite.max_uses is not None and invite.uses >= invite.max_uses:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invite code usage limit reached"
+        )
     
     # Check if email already exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
@@ -74,16 +104,50 @@ async def register_user(user_data: UserCreate, db: Session = Depends(get_db)):
             )
     
     # Create new user
+    role = UserRole.STUDENT
+    if invite.role == InviteRole.TEACHER:
+        role = UserRole.TEACHER
+
+    organization_id = invite.organization_id
+    class_obj = None
+    if invite.role == InviteRole.STUDENT and invite.class_id:
+        class_obj = db.query(Class).filter(Class.id == invite.class_id).first()
+        if not class_obj or not class_obj.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invite class is not available"
+            )
+        organization_id = class_obj.organization_id
+
     new_user = User(
         email=user_data.email,
         username=user_data.username or user_data.email.split('@')[0],
         hashed_password=get_password_hash(user_data.password),
         full_name=user_data.full_name,
-        role=UserRole.STUDENT,  # Default role
-        is_verified=False
+        role=role,
+        is_verified=False,
+        organization_id=organization_id
     )
     
     db.add(new_user)
+    db.flush()
+
+    if invite.role == InviteRole.STUDENT and class_obj:
+        db.add(ClassStudent(
+            class_id=class_obj.id,
+            user_id=new_user.id,
+            invite_id=invite.id,
+            invited_by=invite.created_by
+        ))
+
+    invite.uses += 1
+    db.add(InviteUse(
+        invite_id=invite.id,
+        user_id=new_user.id,
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent")
+    ))
+
     db.commit()
     db.refresh(new_user)
     
@@ -98,7 +162,9 @@ async def login(
     """Login with email and password"""
     
     # Find user by email
-    user = db.query(User).filter(User.email == form_data.username).first()
+    user = db.query(User).filter(
+        or_(User.email == form_data.username, User.username == form_data.username)
+    ).first()
     
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
@@ -167,6 +233,12 @@ async def create_guest_session(
     db: Session = Depends(get_db)
 ):
     """Create a guest session for anonymous users"""
+
+    if os.getenv("ALLOW_GUEST", "false").lower() != "true":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Guest access is disabled"
+        )
     
     # Generate unique guest ID
     guest_id = f"guest_{uuid.uuid4().hex[:12]}"

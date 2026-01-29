@@ -6,12 +6,15 @@ from sqlalchemy.orm import Session
 import json
 
 from database import engine, get_db, SessionLocal
-from models import Base
+from models import Base, User, UserRole
 from routers import auth_router
 from routers import telemetry_router
 from routers import class_router
+from routers import invite_router
 from routers import dashboard_router
 from app_registry import ensure_default_apps
+from auth import get_password_hash
+from sqlalchemy import text
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -24,8 +27,44 @@ def seed_apps():
     db = SessionLocal()
     try:
         ensure_default_apps(db)
+        ensure_admin_user(db)
+        ensure_schema_updates()
     finally:
         db.close()
+
+
+def ensure_admin_user(db: Session):
+    existing = db.query(User).filter(User.username == "admin").first()
+    if existing:
+        return
+
+    admin_user = User(
+        email="admin@ping.local",
+        username="admin",
+        full_name="Admin",
+        hashed_password=get_password_hash("admin"),
+        role=UserRole.PLATFORM_ADMIN,
+        is_active=True,
+        is_verified=True
+    )
+    db.add(admin_user)
+    db.commit()
+
+
+def ensure_schema_updates():
+    with engine.connect() as conn:
+        conn.execute(text("""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'classes' AND column_name = 'description'
+                ) THEN
+                    ALTER TABLE classes ADD COLUMN description TEXT;
+                END IF;
+            END $$;
+        """))
+        conn.commit()
 
 # CORS middleware
 app.add_middleware(
@@ -40,6 +79,7 @@ app.add_middleware(
 app.include_router(auth_router.router)
 app.include_router(telemetry_router.router)
 app.include_router(class_router.router)
+app.include_router(invite_router.router)
 app.include_router(dashboard_router.router)
 
 class Simulation(BaseModel):

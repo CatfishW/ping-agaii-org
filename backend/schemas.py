@@ -14,6 +14,7 @@ class UserCreate(BaseModel):
     password: str
     full_name: str
     username: Optional[str] = None
+    invite_code: str
     
     @validator('password')
     def password_strength(cls, v):
@@ -129,6 +130,10 @@ class ClassWithStats(ClassResponse):
 class JoinCodeValidate(BaseModel):
     join_code: str
 
+
+class JoinClassRequest(BaseModel):
+    join_code: str
+
 class StudentProgress(BaseModel):
     user_id: Optional[int]
     guest_id: Optional[str]
@@ -137,6 +142,31 @@ class StudentProgress(BaseModel):
     total_sessions: int
     total_events: int
     last_active: Optional[datetime]
+
+
+class InviteCreate(BaseModel):
+    expires_at: Optional[datetime] = None
+    max_uses: Optional[int] = None
+    class_id: Optional[int] = None
+    notes: Optional[str] = None
+
+
+class InviteResponse(BaseModel):
+    id: int
+    code: str
+    role: str
+    created_by: int
+    organization_id: Optional[int]
+    class_id: Optional[int]
+    max_uses: Optional[int]
+    uses: int
+    expires_at: Optional[datetime]
+    is_active: bool
+    notes: Optional[str]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 # Telemetry Schemas
 class TelemetrySessionCreate(BaseModel):

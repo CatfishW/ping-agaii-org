@@ -18,3 +18,49 @@ VALUES (
   true,
   1
 );
+
+-- Schema updates for invite system
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'classes' AND column_name = 'description'
+    ) THEN
+        ALTER TABLE classes ADD COLUMN description TEXT;
+    END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS invite_codes (
+    id SERIAL PRIMARY KEY,
+    code VARCHAR(64) UNIQUE NOT NULL,
+    role VARCHAR(32) NOT NULL,
+    created_by INTEGER NOT NULL REFERENCES users(id),
+    organization_id INTEGER REFERENCES organizations(id),
+    class_id INTEGER REFERENCES classes(id),
+    max_uses INTEGER,
+    uses INTEGER DEFAULT 0,
+    expires_at TIMESTAMPTZ,
+    is_active BOOLEAN DEFAULT TRUE,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS invite_uses (
+    id SERIAL PRIMARY KEY,
+    invite_id INTEGER NOT NULL REFERENCES invite_codes(id),
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    used_at TIMESTAMPTZ DEFAULT NOW(),
+    ip_address VARCHAR(64),
+    user_agent TEXT
+);
+
+CREATE TABLE IF NOT EXISTS class_students (
+    id SERIAL PRIMARY KEY,
+    class_id INTEGER NOT NULL REFERENCES classes(id),
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    invite_id INTEGER REFERENCES invite_codes(id),
+    invited_by INTEGER REFERENCES users(id),
+    joined_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT uq_class_students UNIQUE (class_id, user_id)
+);

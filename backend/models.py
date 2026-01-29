@@ -79,6 +79,7 @@ class Class(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
     join_code = Column(String, unique=True, index=True, nullable=False)
     
     teacher_id = Column(Integer, ForeignKey("users.id"), nullable=False)
@@ -92,6 +93,21 @@ class Class(Base):
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class ClassStudent(Base):
+    __tablename__ = "class_students"
+
+    id = Column(Integer, primary_key=True, index=True)
+    class_id = Column(Integer, ForeignKey("classes.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    invite_id = Column(Integer, ForeignKey("invite_codes.id"), nullable=True)
+    invited_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    joined_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("class_id", "user_id", name="uq_class_students"),
+    )
 
 class Module(Base):
     __tablename__ = "modules"
@@ -196,6 +212,41 @@ class AuditLog(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
 
+class InviteRole(str, enum.Enum):
+    TEACHER = "teacher"
+    STUDENT = "student"
+
+
+class InviteCode(Base):
+    __tablename__ = "invite_codes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String, unique=True, index=True, nullable=False)
+    role = Column(Enum(InviteRole), nullable=False)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=True)
+    class_id = Column(Integer, ForeignKey("classes.id"), nullable=True)
+    max_uses = Column(Integer, nullable=True)
+    uses = Column(Integer, default=0)
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+    is_active = Column(Boolean, default=True)
+    notes = Column(Text, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class InviteUse(Base):
+    __tablename__ = "invite_uses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    invite_id = Column(Integer, ForeignKey("invite_codes.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    used_at = Column(DateTime(timezone=True), server_default=func.now())
+    ip_address = Column(String, nullable=True)
+    user_agent = Column(String, nullable=True)
+
+
 class AppStatus(str, enum.Enum):
     ACTIVE = "active"
     MAINTENANCE = "maintenance"
@@ -250,7 +301,7 @@ class AppSession(Base):
     session_id = Column(String, index=True, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     external_user_id = Column(String, nullable=True)
-    metadata = Column(JSON, nullable=True)
+    metadata_json = Column("metadata", JSON, nullable=True)
 
     started_at = Column(DateTime(timezone=True), server_default=func.now())
     ended_at = Column(DateTime(timezone=True), nullable=True)

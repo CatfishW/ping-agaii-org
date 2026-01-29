@@ -10,12 +10,13 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
     email: '',
     password: '',
     full_name: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    invite_code: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { login, register, loginAsGuest } = useAuth();
+  const { login, register } = useAuth();
 
   if (!isOpen) return null;
 
@@ -39,7 +40,8 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
       const result = await register({
         email: formData.email,
         password: formData.password,
-        full_name: formData.full_name
+        full_name: formData.full_name,
+        invite_code: formData.invite_code
       });
 
       if (result.success) {
@@ -57,18 +59,6 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
       }
     }
 
-    setLoading(false);
-  };
-
-  const handleGuestLogin = async () => {
-    setLoading(true);
-    const result = await loginAsGuest();
-    
-    if (result.success) {
-      onClose();
-    } else {
-      setError(result.error);
-    }
     setLoading(false);
   };
 
@@ -122,17 +112,34 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
           <div className="form-group">
             <label>
               <Mail size={18} />
-              Email
+              {mode === 'login' ? 'Email or Username' : 'Email'}
             </label>
             <input
-              type="email"
+              type={mode === 'login' ? 'text' : 'email'}
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Enter your email"
+              placeholder={mode === 'login' ? 'Email or username' : 'Enter your email'}
               required
             />
           </div>
+
+          {mode === 'register' && (
+            <div className="form-group">
+              <label>
+                <Lock size={18} />
+                Invite Code
+              </label>
+              <input
+                type="text"
+                name="invite_code"
+                value={formData.invite_code}
+                onChange={handleChange}
+                placeholder="Enter your invite code"
+                required
+              />
+            </div>
+          )}
 
           <div className="form-group">
             <label>
@@ -182,14 +189,6 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
             {loading ? 'Processing...' : mode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
-
-        <div className="auth-divider">
-          <span>OR</span>
-        </div>
-
-        <button className="btn-guest" onClick={handleGuestLogin} disabled={loading}>
-          Continue as Guest
-        </button>
 
         <div className="auth-footer">
           {mode === 'login' ? (

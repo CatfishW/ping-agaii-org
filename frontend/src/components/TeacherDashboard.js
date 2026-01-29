@@ -1,15 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Users, BookOpen, Activity, TrendingUp } from 'lucide-react';
+import { Plus, Users, BookOpen, Activity, TrendingUp, Copy } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import './TeacherDashboard.css';
 
 const TeacherDashboard = () => {
   const { user } = useAuth();
+  const isAdmin = user?.role === 'org_admin' || user?.role === 'platform_admin';
+  const isTeacher = user?.role === 'teacher' || isAdmin;
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [invites, setInvites] = useState([]);
+  const [inviteLoading, setInviteLoading] = useState(true);
+  const [inviteError, setInviteError] = useState('');
+  const [inviteSuccess, setInviteSuccess] = useState('');
+  const [copiedInviteId, setCopiedInviteId] = useState(null);
+  const [teacherInviteForm, setTeacherInviteForm] = useState({
+    maxUses: '',
+    expiresAt: '',
+    notes: ''
+  });
+  const [studentInviteForm, setStudentInviteForm] = useState({
+    classId: '',
+    maxUses: '',
+    expiresAt: '',
+    notes: ''
+  });
   const [stats, setStats] = useState({
     totalClasses: 0,
     totalStudents: 0,
@@ -18,8 +36,14 @@ const TeacherDashboard = () => {
   });
 
   useEffect(() => {
+    if (!user) {
+      return;
+    }
     fetchClasses();
-  }, []);
+    if (isTeacher) {
+      fetchInvites();
+    }
+  }, [user]);
 
   const fetchClasses = async () => {
     try {
@@ -29,6 +53,13 @@ const TeacherDashboard = () => {
       });
       
       setClasses(response.data);
+
+      if (response.data.length) {
+        setStudentInviteForm((prev) => ({
+          ...prev,
+          classId: prev.classId || response.data[0].id
+        }));
+      }
       
       // Calculate stats
       const totalStudents = response.data.reduce((sum, cls) => sum + (cls.student_count || 0), 0);
@@ -46,6 +77,120 @@ const TeacherDashboard = () => {
       console.error('Error fetching classes:', error);
       setLoading(false);
     }
+  };
+
+  const fetchInvites = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get('/api/invites/mine', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setInvites(response.data || []);
+      setInviteLoading(false);
+    } catch (error) {
+      console.error('Error fetching invites:', error);
+      setInviteError('Unable to load invite codes');
+      setInviteLoading(false);
+    }
+  };
+
+  const buildInvitePayload = (form) => {
+    const payload = {};
+    if (form.maxUses) {
+      payload.max_uses = Number(form.maxUses);
+    }
+    if (form.expiresAt) {
+      payload.expires_at = new Date(`${form.expiresAt}T23:59:59Z`).toISOString();
+    }
+    if (form.notes?.trim()) {
+      payload.notes = form.notes.trim();
+    }
+    return payload;
+  };
+
+  const handleCreateTeacherInvite = async (event) => {
+    event.preventDefault();
+    setInviteError('');
+    setInviteSuccess('');
+    try {
+      const token = localStorage.getItem('access_token');
+      const payload = buildInvitePayload(teacherInviteForm);
+      const response = await axios.post('/api/invites/teachers', payload, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setInvites((prev) => [response.data, ...prev]);
+      setTeacherInviteForm({ maxUses: '', expiresAt: '', notes: '' });
+      setInviteSuccess('Teacher invite created');
+    } catch (error) {
+      setInviteError(error.response?.data?.detail || 'Failed to create teacher invite');
+    }
+  };
+
+  const handleCreateStudentInvite = async (event) => {
+    event.preventDefault();
+    setInviteError('');
+    setInviteSuccess('');
+    if (!studentInviteForm.classId) {
+      setInviteError('Select a class for student invite');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('access_token');
+      const payload = buildInvitePayload(studentInviteForm);
+      payload.class_id = Number(studentInviteForm.classId);
+      const response = await axios.post('/api/invites/students', payload, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setInvites((prev) => [response.data, ...prev]);
+      setStudentInviteForm((prev) => ({
+        ...prev,
+        maxUses: '',
+        expiresAt: '',
+        notes: ''
+      }));
+      setInviteSuccess('Student invite created');
+    } catch (error) {
+      setInviteError(error.response?.data?.detail || 'Failed to create student invite');
+    }
+  };
+
+  const handleToggleInvite = async (inviteId) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.post(
+        `/api/invites/${inviteId}/toggle`,
+        {},
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+
+      setInvites((prev) => prev.map((invite) => (
+        invite.id === inviteId ? response.data : invite
+      )));
+    } catch (error) {
+      setInviteError(error.response?.data?.detail || 'Unable to update invite');
+    }
+  };
+
+  const handleCopyInvite = (code, inviteId) => {
+    navigator.clipboard.writeText(code);
+    setCopiedInviteId(inviteId);
+    setTimeout(() => setCopiedInviteId(null), 1500);
+  };
+
+  const getClassLabel = (classId) => {
+    if (!classId) {
+      return '—';
+    }
+    const match = classes.find((cls) => cls.id === classId);
+    return match ? match.name : `Class ${classId}`;
+  };
+
+  const formatExpiry = (expiresAt) => {
+    if (!expiresAt) {
+      return 'No expiry';
+    }
+    return new Date(expiresAt).toLocaleDateString();
   };
 
   if (loading) {
@@ -134,6 +279,194 @@ const TeacherDashboard = () => {
           </div>
         )}
       </div>
+
+      {isTeacher && (
+        <div className="invites-section">
+          <div className="invites-header">
+            <div>
+              <h2>Invite Codes</h2>
+              <p>Create teacher or student invites with limits and expiration.</p>
+            </div>
+          </div>
+
+          <div className="invites-grid">
+            {isAdmin && (
+              <div className="invite-card">
+                <h3>Teacher Invites</h3>
+                <p>Admins generate teacher invite codes for onboarding.</p>
+                <form className="invite-form" onSubmit={handleCreateTeacherInvite}>
+                  <div className="invite-form-grid">
+                    <div className="form-group">
+                      <label>Max Uses</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={teacherInviteForm.maxUses}
+                        onChange={(event) => setTeacherInviteForm({
+                          ...teacherInviteForm,
+                          maxUses: event.target.value
+                        })}
+                        placeholder="Unlimited"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Expires On</label>
+                      <input
+                        type="date"
+                        value={teacherInviteForm.expiresAt}
+                        onChange={(event) => setTeacherInviteForm({
+                          ...teacherInviteForm,
+                          expiresAt: event.target.value
+                        })}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Notes</label>
+                    <input
+                      type="text"
+                      value={teacherInviteForm.notes}
+                      onChange={(event) => setTeacherInviteForm({
+                        ...teacherInviteForm,
+                        notes: event.target.value
+                      })}
+                      placeholder="Optional notes"
+                    />
+                  </div>
+                  <button className="btn-primary" type="submit">Create Teacher Invite</button>
+                </form>
+              </div>
+            )}
+
+            <div className="invite-card">
+              <h3>Student Invites</h3>
+              <p>Generate student invites tied to a class join.</p>
+              <form className="invite-form" onSubmit={handleCreateStudentInvite}>
+                <div className="invite-form-grid">
+                  <div className="form-group">
+                    <label>Class</label>
+                    <select
+                      value={studentInviteForm.classId}
+                      onChange={(event) => setStudentInviteForm({
+                        ...studentInviteForm,
+                        classId: event.target.value
+                      })}
+                    >
+                      <option value="">Select class</option>
+                      {classes.map((cls) => (
+                        <option key={cls.id} value={cls.id}>{cls.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Max Uses</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={studentInviteForm.maxUses}
+                      onChange={(event) => setStudentInviteForm({
+                        ...studentInviteForm,
+                        maxUses: event.target.value
+                      })}
+                      placeholder="Unlimited"
+                    />
+                  </div>
+                </div>
+                <div className="invite-form-grid">
+                  <div className="form-group">
+                    <label>Expires On</label>
+                    <input
+                      type="date"
+                      value={studentInviteForm.expiresAt}
+                      onChange={(event) => setStudentInviteForm({
+                        ...studentInviteForm,
+                        expiresAt: event.target.value
+                      })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Notes</label>
+                    <input
+                      type="text"
+                      value={studentInviteForm.notes}
+                      onChange={(event) => setStudentInviteForm({
+                        ...studentInviteForm,
+                        notes: event.target.value
+                      })}
+                      placeholder="Optional notes"
+                    />
+                  </div>
+                </div>
+                <button className="btn-primary" type="submit">Create Student Invite</button>
+              </form>
+            </div>
+          </div>
+
+          {inviteError && <div className="invite-message error">{inviteError}</div>}
+          {inviteSuccess && <div className="invite-message success">{inviteSuccess}</div>}
+
+          <div className="invite-list">
+            {inviteLoading ? (
+              <div className="loading">Loading invites...</div>
+            ) : invites.length === 0 ? (
+              <div className="empty-state small">
+                <Users size={48} color="#ccc" />
+                <h3>No invites yet</h3>
+                <p>Create your first invite to onboard teachers or students.</p>
+              </div>
+            ) : (
+              <div className="invite-table">
+                <div className="invite-row header">
+                  <span>Code</span>
+                  <span>Role</span>
+                  <span>Class</span>
+                  <span>Uses</span>
+                  <span>Expires</span>
+                  <span>Status</span>
+                  <span>Actions</span>
+                </div>
+                {invites.map((invite) => {
+                  const isExpired = invite.expires_at && new Date(invite.expires_at) < new Date();
+                  const statusLabel = !invite.is_active
+                    ? 'Disabled'
+                    : isExpired
+                      ? 'Expired'
+                      : 'Active';
+                  return (
+                    <div key={invite.id} className={`invite-row ${!invite.is_active || isExpired ? 'inactive' : ''}`}>
+                      <div className="invite-code">
+                        <code>{invite.code}</code>
+                        <button
+                          className="btn-icon"
+                          type="button"
+                          onClick={() => handleCopyInvite(invite.code, invite.id)}
+                          title="Copy invite code"
+                        >
+                          {copiedInviteId === invite.id ? 'Copied' : <Copy size={16} />}
+                        </button>
+                      </div>
+                      <span className="invite-role">{invite.role.toUpperCase()}</span>
+                      <span>{getClassLabel(invite.class_id)}</span>
+                      <span>{invite.uses}/{invite.max_uses ?? '∞'}</span>
+                      <span>{formatExpiry(invite.expires_at)}</span>
+                      <span className={`invite-status ${statusLabel.toLowerCase()}`}>{statusLabel}</span>
+                      <div className="invite-actions">
+                        <button
+                          className="btn-secondary"
+                          type="button"
+                          onClick={() => handleToggleInvite(invite.id)}
+                        >
+                          {invite.is_active ? 'Disable' : 'Enable'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Create Class Modal */}
       {showCreateModal && (
