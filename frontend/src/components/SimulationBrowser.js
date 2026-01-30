@@ -119,7 +119,7 @@ const SimulationBrowser = ({ searchQuery }) => {
             <div className="no-results">No simulations found</div>
           ) : (
             simulations.map((sim) => {
-              const simUrl = sim.build_path || `/game/${sim.module_id}`;
+              const simUrl = `/game/${sim.module_id}`;
               const simImage = sim.image || subjectImages[sim.subject] || '/images/force_motion_cover.png';
               const simTags = sim.tags && sim.tags.length ? sim.tags : [sim.subject];
               return (
@@ -140,20 +140,9 @@ const SimulationBrowser = ({ searchQuery }) => {
                       <span key={index} className="sim-tag">{tag}</span>
                     ))}
                   </div>
-                  {simUrl.startsWith('/game/') ? (
-                    <Link to={simUrl} className="sim-btn">
-                      Launch Simulation
-                    </Link>
-                  ) : (
-                    <a
-                      href={simUrl}
-                      className="sim-btn"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Launch Simulation
-                    </a>
-                  )}
+                  <Link to={simUrl} className="sim-btn">
+                    Launch Simulation
+                  </Link>
                 </div>
               </div>
             )})
