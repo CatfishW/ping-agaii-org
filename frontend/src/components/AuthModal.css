@@ -299,3 +299,26 @@
     font-size: 1.5rem;
   }
 }
+
+.auth-success {
+  background: #e8f7ef;
+  color: #0b6b3a;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.forgot-link {
+  margin-top: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}

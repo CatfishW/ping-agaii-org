@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { X, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './AuthModal.css';
 
 const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
-  const [mode, setMode] = useState(defaultMode); // 'login' or 'register'
+  const [mode, setMode] = useState(defaultMode); // 'login', 'register', or 'reset'
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -14,10 +15,20 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
     invite_code: ''
   });
   const [error, setError] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [overlayClick, setOverlayClick] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
 
   const { login, register } = useAuth();
+
+  useEffect(() => {
+    if (defaultMode) {
+      setMode(defaultMode);
+    }
+  }, [defaultMode, isOpen]);
+
+
 
   if (!isOpen) return null;
 
@@ -50,7 +61,7 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
       } else {
         setError(result.error);
       }
-    } else {
+    } else if (mode === 'login') {
       const result = await login(formData.email, formData.password);
 
       if (result.success) {
@@ -62,6 +73,23 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
 
     setLoading(false);
   };
+
+  const handleResetSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setResetMessage('');
+
+    try {
+      await axios.post('/api/auth/password-reset', { email: resetEmail });
+      setResetMessage('A new password has been sent to your email.');
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to reset password.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const handleOverlayMouseDown = (event) => {
     setOverlayClick(event.target === event.currentTarget);
@@ -86,8 +114,8 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
         </button>
 
         <div className="auth-modal-header">
-          <h2>{mode === 'login' ? 'Welcome Back' : 'Create Account'}</h2>
-          <p>{mode === 'login' ? 'Sign in to continue' : 'Join PING today'}</p>
+          <h2>{mode === 'login' ? 'Welcome Back' : mode === 'register' ? 'Create Account' : 'Reset Password'}</h2>
+          <p>{mode === 'login' ? 'Sign in to continue' : mode === 'register' ? 'Join PING today' : 'We will email you a new password'}</p>
         </div>
 
         <div className="auth-tabs">
@@ -106,8 +134,33 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
         </div>
 
         {error && <div className="auth-error">{error}</div>}
+        {resetMessage && <div className="auth-success">{resetMessage}</div>}
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        {mode === 'reset' ? (
+          <form onSubmit={handleResetSubmit} className="auth-form">
+            <div className="form-group">
+              <label>
+                <Mail size={18} />
+                Email
+              </label>
+              <input
+                type="email"
+                name="reset_email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+            <button type="submit" className="btn-auth-submit" disabled={loading}>
+              {loading ? 'Sending...' : 'Send New Password'}
+            </button>
+            <div className="auth-footer">
+              <button type="button" onClick={() => setMode('login')}>Back to sign in</button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="auth-form">
           {mode === 'register' && (
             <div className="form-group">
               <label>
@@ -205,20 +258,28 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
             {loading ? 'Processing...' : mode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
+        )}
 
-        <div className="auth-footer">
-          {mode === 'login' ? (
-            <p>
-              Don't have an account?{' '}
-              <button onClick={() => setMode('register')}>Sign up</button>
-            </p>
-          ) : (
-            <p>
-              Already have an account?{' '}
-              <button onClick={() => setMode('login')}>Sign in</button>
-            </p>
-          )}
-        </div>
+        {mode !== 'reset' && (
+          <div className="auth-footer">
+            {mode === 'login' ? (
+              <p>
+                Don't have an account?{' '}
+                <button onClick={() => setMode('register')}>Sign up</button>
+              </p>
+            ) : (
+              <p>
+                Already have an account?{' '}
+                <button onClick={() => setMode('login')}>Sign in</button>
+              </p>
+            )}
+            {mode === 'login' && (
+              <button className="forgot-link" onClick={() => setMode('reset')}>
+                Forgot password?
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

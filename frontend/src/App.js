@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/AuthContext';
@@ -38,6 +38,18 @@ function App() {
   const [currentPage, setCurrentPage] = useState('simulations');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState('login');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const auth = params.get('auth');
+    if (auth === 'login' || auth === 'register') {
+      setAuthMode(auth);
+      setShowAuthModal(true);
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+  }, []);
 
   return (
     <AuthProvider>
@@ -47,7 +59,7 @@ function App() {
             currentPage={currentPage} 
             setCurrentPage={setCurrentPage}
             setSearchQuery={setSearchQuery}
-            onLoginClick={() => setShowAuthModal(true)}
+            onLoginClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
           />
           <Routes>
             <Route path="/" element={
@@ -86,6 +98,7 @@ function App() {
           <AuthModal 
             isOpen={showAuthModal} 
             onClose={() => setShowAuthModal(false)} 
+            defaultMode={authMode}
           />
         </div>
       </Router>

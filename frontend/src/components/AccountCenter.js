@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { User, ShieldCheck, Trash2, Mail, Gamepad2 } from 'lucide-react';
+import { User, ShieldCheck, Trash2, Mail, Gamepad2, Tag } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './AccountCenter.css';
 
@@ -24,10 +24,19 @@ const AccountCenter = () => {
   const [templatesLoading, setTemplatesLoading] = useState(false);
   const [modules, setModules] = useState([]);
   const [modulesLoading, setModulesLoading] = useState(false);
+  const [subjects, setSubjects] = useState([]);
+  const [subjectsLoading, setSubjectsLoading] = useState(false);
+  const [newSubject, setNewSubject] = useState({
+    key: '',
+    name: '',
+    sort_order: 0,
+    is_active: true
+  });
   const [newModule, setNewModule] = useState({
     module_id: '',
     title: '',
     subject: 'physics',
+    subject_id: null,
     build_path: ''
   });
 
@@ -46,6 +55,7 @@ const AccountCenter = () => {
     if (isAdmin) {
       fetchTemplates();
       fetchModules();
+      fetchSubjects();
     }
   }, [isAdmin]);
 
@@ -74,6 +84,67 @@ const AccountCenter = () => {
       console.error('Failed to load modules:', error);
     } finally {
       setModulesLoading(false);
+    }
+  };
+
+  const fetchSubjects = async () => {
+    setSubjectsLoading(true);
+    try {
+      const response = await axios.get('/api/admin/subjects', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+      });
+      setSubjects(response.data || []);
+    } catch (error) {
+      console.error('Failed to load subjects:', error);
+    } finally {
+      setSubjectsLoading(false);
+    }
+  };
+
+  const handleSubjectChange = (id, field, value) => {
+    setSubjects((prev) => prev.map((subject) => (
+      subject.id === id ? { ...subject, [field]: value } : subject
+    )));
+  };
+
+  const saveSubject = async (subject) => {
+    setSaving(true);
+    setMessage({ type: '', text: '' });
+    try {
+      await axios.put(`/api/admin/subjects/${subject.id}`, {
+        name: subject.name,
+        sort_order: subject.sort_order,
+        is_active: subject.is_active
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+      });
+      setMessage({ type: 'success', text: `Subject ${subject.key} saved.` });
+    } catch (error) {
+      setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to save subject.' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const createSubject = async () => {
+    setSaving(true);
+    setMessage({ type: '', text: '' });
+    try {
+      const response = await axios.post('/api/admin/subjects', {
+        key: newSubject.key,
+        name: newSubject.name,
+        sort_order: Number(newSubject.sort_order) || 0,
+        is_active: newSubject.is_active
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+      });
+      setSubjects((prev) => [response.data, ...prev]);
+      setNewSubject({ key: '', name: '', sort_order: 0, is_active: true });
+      setMessage({ type: 'success', text: 'Subject created.' });
+    } catch (error) {
+      setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to create subject.' });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -117,6 +188,7 @@ const AccountCenter = () => {
         title: module.title,
         description: module.description,
         subject: module.subject,
+        subject_id: module.subject_id,
         build_path: module.build_path,
         is_published: module.is_published,
         version: module.version
@@ -139,13 +211,14 @@ const AccountCenter = () => {
         module_id: newModule.module_id,
         title: newModule.title,
         subject: newModule.subject,
+        subject_id: newModule.subject_id,
         build_path: newModule.build_path,
         description: ''
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
       });
       setModules((prev) => [response.data, ...prev]);
-      setNewModule({ module_id: '', title: '', subject: 'physics', build_path: '' });
+      setNewModule({ module_id: '', title: '', subject: 'physics', subject_id: null, build_path: '' });
       setMessage({ type: 'success', text: 'Module created.' });
     } catch (error) {
       setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to create module.' });
@@ -257,6 +330,12 @@ const AccountCenter = () => {
                 <Mail size={16} /> Email Templates
               </button>
               <button
+                className={`sidebar-item ${activeSection === 'subjects' ? 'active' : ''}`}
+                onClick={() => setActiveSection('subjects')}
+              >
+                <Tag size={16} /> Subjects
+              </button>
+              <button
                 className={`sidebar-item ${activeSection === 'modules' ? 'active' : ''}`}
                 onClick={() => setActiveSection('modules')}
               >
@@ -289,6 +368,88 @@ const AccountCenter = () => {
               <button className="btn-primary" disabled={saving} onClick={saveProfile}>
                 Save profile
               </button>
+            </section>
+          )}
+
+          {isAdmin && activeSection === 'subjects' && (
+            <section className="account-card">
+              <h2><Tag size={18} /> Subjects</h2>
+              <div className="admin-grid">
+                <div className="admin-card">
+                  <h3>Create Subject</h3>
+                  <label>
+                    Key
+                    <input
+                      value={newSubject.key}
+                      onChange={(event) => setNewSubject({ ...newSubject, key: event.target.value })}
+                      placeholder="physics"
+                    />
+                  </label>
+                  <label>
+                    Name
+                    <input
+                      value={newSubject.name}
+                      onChange={(event) => setNewSubject({ ...newSubject, name: event.target.value })}
+                      placeholder="Physics"
+                    />
+                  </label>
+                  <label>
+                    Sort Order
+                    <input
+                      type="number"
+                      value={newSubject.sort_order}
+                      onChange={(event) => setNewSubject({ ...newSubject, sort_order: event.target.value })}
+                    />
+                  </label>
+                  <label className="toggle">
+                    <input
+                      type="checkbox"
+                      checked={newSubject.is_active}
+                      onChange={(event) => setNewSubject({ ...newSubject, is_active: event.target.checked })}
+                    />
+                    <span>Active</span>
+                  </label>
+                  <button className="btn-primary" disabled={saving} onClick={createSubject}>Create Subject</button>
+                </div>
+
+                {subjectsLoading ? (
+                  <p>Loading subjects...</p>
+                ) : (
+                  subjects.map((subject) => (
+                    <div key={subject.id} className="admin-card">
+                      <div className="admin-card-header">
+                        <strong>{subject.key}</strong>
+                        <label className="toggle">
+                          <input
+                            type="checkbox"
+                            checked={subject.is_active}
+                            onChange={(event) => handleSubjectChange(subject.id, 'is_active', event.target.checked)}
+                          />
+                          <span>Active</span>
+                        </label>
+                      </div>
+                      <label>
+                        Name
+                        <input
+                          value={subject.name}
+                          onChange={(event) => handleSubjectChange(subject.id, 'name', event.target.value)}
+                        />
+                      </label>
+                      <label>
+                        Sort Order
+                        <input
+                          type="number"
+                          value={subject.sort_order}
+                          onChange={(event) => handleSubjectChange(subject.id, 'sort_order', event.target.value)}
+                        />
+                      </label>
+                      <button className="btn-primary" disabled={saving} onClick={() => saveSubject(subject)}>
+                        Save Subject
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
             </section>
           )}
 
@@ -388,16 +549,31 @@ const AccountCenter = () => {
                   </label>
                   <label>
                     Subject
-                    <select
-                      value={newModule.subject}
-                      onChange={(event) => setNewModule({ ...newModule, subject: event.target.value })}
-                    >
-                      <option value="physics">Physics</option>
-                      <option value="math">Math</option>
-                      <option value="chemistry">Chemistry</option>
-                      <option value="biology">Biology</option>
-                      <option value="earth-science">Earth & Space</option>
-                    </select>
+                    {subjects.length ? (
+                      <select
+                        value={newModule.subject_id || ''}
+                        onChange={(event) => {
+                          const selectedId = Number(event.target.value) || null;
+                          const selected = subjects.find((subject) => subject.id === selectedId);
+                          setNewModule({
+                            ...newModule,
+                            subject_id: selectedId,
+                            subject: selected ? selected.key : ''
+                          });
+                        }}
+                      >
+                        <option value="">Select subject</option>
+                        {subjects.map((subject) => (
+                          <option key={subject.id} value={subject.id}>{subject.name}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        value={newModule.subject}
+                        onChange={(event) => setNewModule({ ...newModule, subject: event.target.value })}
+                        placeholder="physics"
+                      />
+                    )}
                   </label>
                   <label>
                     Build Path
@@ -425,10 +601,27 @@ const AccountCenter = () => {
                       </label>
                       <label>
                         Subject
-                        <input
-                          value={module.subject}
-                          onChange={(event) => handleModuleChange(module.id, 'subject', event.target.value)}
-                        />
+                        {subjects.length ? (
+                          <select
+                            value={module.subject_id || ''}
+                            onChange={(event) => {
+                              const selectedId = Number(event.target.value) || null;
+                              const selected = subjects.find((subject) => subject.id === selectedId);
+                              handleModuleChange(module.id, 'subject_id', selectedId);
+                              handleModuleChange(module.id, 'subject', selected ? selected.key : '');
+                            }}
+                          >
+                            <option value="">Select subject</option>
+                            {subjects.map((subject) => (
+                              <option key={subject.id} value={subject.id}>{subject.name}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            value={module.subject}
+                            onChange={(event) => handleModuleChange(module.id, 'subject', event.target.value)}
+                          />
+                        )}
                       </label>
                       <label>
                         Build Path
