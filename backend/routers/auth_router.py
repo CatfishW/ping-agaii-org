@@ -8,9 +8,9 @@ import uuid
 from database import get_db
 from models import User, ConsentRecord, UserRole, InviteCode, InviteUse, InviteRole, Class, ClassStudent
 from schemas import (
-    UserCreate, UserLogin, UserResponse, Token, 
+    UserCreate, UserLogin, UserResponse, Token,
     GuestSessionCreate, GuestSessionResponse,
-    ConsentCreate, ConsentResponse
+    ConsentCreate, ConsentResponse, UserUpdate, PasswordUpdate
 )
 from auth import (
     verify_password, get_password_hash, 
@@ -229,6 +229,59 @@ async def login_json(user_data: UserLogin, db: Session = Depends(get_db)):
 async def get_me(current_user: User = Depends(get_current_user)):
     """Get current logged in user information"""
     return current_user
+
+
+@router.put("/me", response_model=UserResponse)
+async def update_me(
+    update_data: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if current_user.role == UserRole.GUEST:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Guest accounts cannot be updated")
+
+    if update_data.full_name is not None:
+        current_user.full_name = update_data.full_name
+    if update_data.school is not None:
+        current_user.school = update_data.school
+    if update_data.course is not None:
+        current_user.course = update_data.course
+    if update_data.bio is not None:
+        current_user.bio = update_data.bio
+    if update_data.avatar is not None:
+        current_user.avatar = update_data.avatar
+
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+@router.put("/password")
+async def update_password(
+    payload: PasswordUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if current_user.role == UserRole.GUEST:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Guest accounts cannot change passwords")
+    if not verify_password(payload.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect")
+
+    current_user.hashed_password = get_password_hash(payload.new_password)
+    db.commit()
+    return {"success": True}
+
+
+@router.delete("/me")
+async def deactivate_account(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if current_user.role == UserRole.GUEST:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Guest accounts cannot be deleted")
+    current_user.is_active = False
+    db.commit()
+    return {"success": True}
 
 # Guest Session Creation
 @router.post("/guest", response_model=GuestSessionResponse)

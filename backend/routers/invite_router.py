@@ -7,6 +7,7 @@ import string
 from database import get_db
 from models import InviteCode, InviteRole, User, UserRole, Class
 from schemas import InviteCreate, InviteResponse
+from email_service import send_email
 from routers.auth_router import get_current_user
 
 router = APIRouter(prefix="/api/invites", tags=["invites"])
@@ -16,6 +17,18 @@ def generate_invite_code(prefix: str) -> str:
     part1 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
     part2 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
     return f"{prefix}-{part1}-{part2}"
+
+
+def build_invite_email(invite: InviteCode, role_label: str) -> tuple[str, str]:
+    subject = f"Your {role_label} invite code"
+    body = (
+        f"You have been invited to join PING.\n\n"
+        f"Invite code: {invite.code}\n"
+        f"Role: {role_label}\n"
+        f"Expires: {invite.expires_at or 'No expiry'}\n\n"
+        f"Use this code during registration."
+    )
+    return subject, body
 
 
 def verify_admin_access(current_user: User):
@@ -59,6 +72,10 @@ async def create_teacher_invite(
     db.add(invite)
     db.commit()
     db.refresh(invite)
+
+    if invite_data.recipient_email:
+        subject, body = build_invite_email(invite, "Teacher")
+        send_email(invite_data.recipient_email, subject, body)
     return invite
 
 
@@ -108,6 +125,10 @@ async def create_student_invite(
     db.add(invite)
     db.commit()
     db.refresh(invite)
+
+    if invite_data.recipient_email:
+        subject, body = build_invite_email(invite, "Student")
+        send_email(invite_data.recipient_email, subject, body)
     return invite
 
 

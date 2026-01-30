@@ -20,13 +20,15 @@ const TeacherDashboard = () => {
   const [teacherInviteForm, setTeacherInviteForm] = useState({
     maxUses: '',
     expiresAt: '',
-    notes: ''
+    notes: '',
+    recipientEmail: ''
   });
   const [studentInviteForm, setStudentInviteForm] = useState({
     classId: '',
     maxUses: '',
     expiresAt: '',
-    notes: ''
+    notes: '',
+    recipientEmail: ''
   });
   const [stats, setStats] = useState({
     totalClasses: 0,
@@ -105,6 +107,9 @@ const TeacherDashboard = () => {
     if (form.notes?.trim()) {
       payload.notes = form.notes.trim();
     }
+    if (form.recipientEmail?.trim()) {
+      payload.recipient_email = form.recipientEmail.trim();
+    }
     return payload;
   };
 
@@ -119,7 +124,7 @@ const TeacherDashboard = () => {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setInvites((prev) => [response.data, ...prev]);
-      setTeacherInviteForm({ maxUses: '', expiresAt: '', notes: '' });
+      setTeacherInviteForm({ maxUses: '', expiresAt: '', notes: '', recipientEmail: '' });
       setInviteSuccess('Teacher invite created');
     } catch (error) {
       setInviteError(error.response?.data?.detail || 'Failed to create teacher invite');
@@ -147,7 +152,8 @@ const TeacherDashboard = () => {
         ...prev,
         maxUses: '',
         expiresAt: '',
-        notes: ''
+        notes: '',
+        recipientEmail: ''
       }));
       setInviteSuccess('Student invite created');
     } catch (error) {
@@ -322,6 +328,18 @@ const TeacherDashboard = () => {
                     </div>
                   </div>
                   <div className="form-group">
+                    <label>Send To (Email)</label>
+                    <input
+                      type="email"
+                      value={teacherInviteForm.recipientEmail}
+                      onChange={(event) => setTeacherInviteForm({
+                        ...teacherInviteForm,
+                        recipientEmail: event.target.value
+                      })}
+                      placeholder="Optional recipient email"
+                    />
+                  </div>
+                  <div className="form-group">
                     <label>Notes</label>
                     <input
                       type="text"
@@ -371,6 +389,18 @@ const TeacherDashboard = () => {
                       placeholder="Unlimited"
                     />
                   </div>
+                </div>
+                <div className="form-group">
+                  <label>Send To (Email)</label>
+                  <input
+                    type="email"
+                    value={studentInviteForm.recipientEmail}
+                    onChange={(event) => setStudentInviteForm({
+                      ...studentInviteForm,
+                      recipientEmail: event.target.value
+                    })}
+                    placeholder="Optional recipient email"
+                  />
                 </div>
                 <div className="invite-form-grid">
                   <div className="form-group">

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 import json
 
 from database import engine, get_db, SessionLocal
-from models import Base, User, UserRole
+from models import Base, User, UserRole, Organization
 from routers import auth_router
 from routers import telemetry_router
 from routers import class_router
@@ -28,29 +28,79 @@ app = FastAPI(title="PING API", version="2.0.0")
 def seed_apps():
     db = SessionLocal()
     try:
+        default_org_id = ensure_default_org(db)
         ensure_default_apps(db)
-        ensure_admin_user(db)
+        ensure_admin_user(db, default_org_id)
+        ensure_teacher_user(db, default_org_id)
         ensure_schema_updates()
         seed_wordgame_scores(db)
     finally:
         db.close()
 
 
-def ensure_admin_user(db: Session):
-    existing = db.query(User).filter(User.username == "admin").first()
+def ensure_default_org(db: Session) -> int:
+    existing = db.query(Organization).order_by(Organization.id.asc()).first()
     if existing:
-        return
+        return existing.id
 
-    admin_user = User(
-        email="admin@ping.local",
-        username="admin",
-        full_name="Admin",
-        hashed_password=get_password_hash("admin"),
-        role=UserRole.PLATFORM_ADMIN,
-        is_active=True,
-        is_verified=True
+    default_org = Organization(
+        name="Default Organization",
+        domain=None,
+        is_active=True
     )
-    db.add(admin_user)
+    db.add(default_org)
+    db.commit()
+    db.refresh(default_org)
+    return default_org.id
+
+
+def ensure_admin_user(db: Session, organization_id: int):
+    admin_user = db.query(User).filter(User.username == "admin").first()
+    if not admin_user:
+        admin_user = User(
+            email="admin@ping.local",
+            username="admin",
+            full_name="Admin",
+            hashed_password=get_password_hash("admin"),
+            role=UserRole.PLATFORM_ADMIN,
+            is_active=True,
+            is_verified=True,
+            organization_id=organization_id
+        )
+        db.add(admin_user)
+    else:
+        admin_user.hashed_password = get_password_hash("admin")
+        if not admin_user.organization_id:
+            admin_user.organization_id = organization_id
+        if admin_user.role != UserRole.PLATFORM_ADMIN:
+            admin_user.role = UserRole.PLATFORM_ADMIN
+        admin_user.is_active = True
+
+    db.commit()
+
+
+def ensure_teacher_user(db: Session, organization_id: int):
+    teacher_user = db.query(User).filter(User.username == "teacher").first()
+    if not teacher_user:
+        teacher_user = User(
+            email="teacher@ping.local",
+            username="teacher",
+            full_name="Teacher",
+            hashed_password=get_password_hash("teacher"),
+            role=UserRole.TEACHER,
+            is_active=True,
+            is_verified=True,
+            organization_id=organization_id
+        )
+        db.add(teacher_user)
+    else:
+        teacher_user.hashed_password = get_password_hash("teacher")
+        if not teacher_user.organization_id:
+            teacher_user.organization_id = organization_id
+        if teacher_user.role != UserRole.TEACHER:
+            teacher_user.role = UserRole.TEACHER
+        teacher_user.is_active = True
+
     db.commit()
 
 

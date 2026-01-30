@@ -160,6 +160,7 @@ class InviteCreate(BaseModel):
     expires_at: Optional[datetime] = None
     max_uses: Optional[int] = None
     class_id: Optional[int] = None
+    recipient_email: Optional[EmailStr] = None
     notes: Optional[str] = None
 
 
@@ -179,6 +180,19 @@ class InviteResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    school: Optional[str] = None
+    course: Optional[str] = None
+    bio: Optional[str] = None
+    avatar: Optional[str] = None
+
+
+class PasswordUpdate(BaseModel):
+    current_password: str
+    new_password: str
 
 # Telemetry Schemas
 class TelemetrySessionCreate(BaseModel):

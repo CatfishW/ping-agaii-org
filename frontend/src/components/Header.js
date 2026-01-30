@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, User, ChevronDown, Sparkles, LogOut } from 'lucide-react';
+import { Search, User, ChevronDown, Sparkles, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './Header.css';
 
@@ -103,10 +103,16 @@ const Header = ({ currentPage, setCurrentPage, setSearchQuery, onLoginClick }) =
                   </div>
                   <hr />
                   {user ? (
-                    <button onClick={() => { logout(); setShowUserMenu(false); }}>
-                      <LogOut size={16} />
-                      Sign Out
-                    </button>
+                    <>
+                      <Link to="/account" onClick={() => setShowUserMenu(false)}>
+                        <Settings size={16} />
+                        Account Center
+                      </Link>
+                      <button onClick={() => { logout(); setShowUserMenu(false); }}>
+                        <LogOut size={16} />
+                        Sign Out
+                      </button>
+                    </>
                   ) : (
                     <button onClick={() => { setShowUserMenu(false); onLoginClick(); }}>
                       <User size={16} />

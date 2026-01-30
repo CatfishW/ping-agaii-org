@@ -241,7 +241,8 @@
   text-transform: capitalize;
 }
 
-.user-dropdown button {
+.user-dropdown button,
+.user-dropdown a {
   width: 100%;
   display: flex;
   align-items: center;
@@ -255,9 +256,11 @@
   transition: var(--transition);
   font-family: var(--font-main);
   text-align: left;
+  text-decoration: none;
 }
 
-.user-dropdown button:hover {
+.user-dropdown button:hover,
+.user-dropdown a:hover {
   background: var(--bg-light);
   color: var(--primary-color);
 }

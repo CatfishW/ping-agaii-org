@@ -122,6 +122,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = (updated) => {
+    setUser((prev) => ({ ...prev, ...updated }));
+  };
+
   const value = {
     user,
     token,
@@ -131,6 +135,7 @@ export const AuthProvider = ({ children }) => {
     loginAsGuest,
     logout,
     submitConsent,
+    updateUser,
     isAuthenticated: !!user,
     isGuest: user?.role === 'guest'
   };
