@@ -39,10 +39,15 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState('login');
+  const [authRedirect, setAuthRedirect] = useState('');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const auth = params.get('auth');
+    const returnUrl = params.get('return');
+    if (returnUrl) {
+      setAuthRedirect(returnUrl);
+    }
     if (auth === 'login' || auth === 'register') {
       setAuthMode(auth);
       setShowAuthModal(true);
@@ -99,6 +104,7 @@ function App() {
             isOpen={showAuthModal} 
             onClose={() => setShowAuthModal(false)} 
             defaultMode={authMode}
+            redirectUrl={authRedirect}
           />
         </div>
       </Router>

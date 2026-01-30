@@ -4,7 +4,7 @@ import { X, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './AuthModal.css';
 
-const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
+const AuthModal = ({ isOpen, onClose, defaultMode = 'login', redirectUrl = '' }) => {
   const [mode, setMode] = useState(defaultMode); // 'login', 'register', or 'reset'
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -57,6 +57,10 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
       });
 
       if (result.success) {
+        if (redirectUrl) {
+          window.location.href = redirectUrl;
+          return;
+        }
         onClose();
       } else {
         setError(result.error);
@@ -65,6 +69,10 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
       const result = await login(formData.email, formData.password);
 
       if (result.success) {
+        if (redirectUrl) {
+          window.location.href = redirectUrl;
+          return;
+        }
         onClose();
       } else {
         setError(result.error);

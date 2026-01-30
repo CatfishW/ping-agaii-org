@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { User, ShieldCheck, Trash2, Mail, Gamepad2, Tag } from 'lucide-react';
+import { User, ShieldCheck, Trash2, Mail, Gamepad2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './AccountCenter.css';
 
