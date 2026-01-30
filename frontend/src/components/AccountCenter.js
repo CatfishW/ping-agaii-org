@@ -7,6 +7,7 @@ import './AccountCenter.css';
 const AccountCenter = () => {
   const { user, logout, updateUser } = useAuth();
   const isAdmin = user?.role === 'org_admin' || user?.role === 'platform_admin';
+  const [activeSection, setActiveSection] = useState('profile');
   const [profile, setProfile] = useState({
     full_name: '',
     school: '',
@@ -233,187 +234,228 @@ const AccountCenter = () => {
         <div className={`account-message ${message.type}`}>{message.text}</div>
       )}
 
-      <div className="account-grid">
-        <section className="account-card">
-          <h2><User size={18} /> Profile</h2>
-          <label>
-            Full name
-            <input name="full_name" value={profile.full_name} onChange={handleProfileChange} />
-          </label>
-          <label>
-            School
-            <input name="school" value={profile.school} onChange={handleProfileChange} />
-          </label>
-          <label>
-            Course
-            <input name="course" value={profile.course} onChange={handleProfileChange} />
-          </label>
-          <label>
-            Bio
-            <textarea name="bio" value={profile.bio} onChange={handleProfileChange} rows="3" />
-          </label>
-          <button className="btn-primary" disabled={saving} onClick={saveProfile}>
-            Save profile
+      <div className="account-layout">
+        <aside className="account-sidebar">
+          <button
+            className={`sidebar-item ${activeSection === 'profile' ? 'active' : ''}`}
+            onClick={() => setActiveSection('profile')}
+          >
+            <User size={16} /> Profile
           </button>
-        </section>
+          <button
+            className={`sidebar-item ${activeSection === 'security' ? 'active' : ''}`}
+            onClick={() => setActiveSection('security')}
+          >
+            <ShieldCheck size={16} /> Security
+          </button>
+          {isAdmin && (
+            <>
+              <button
+                className={`sidebar-item ${activeSection === 'templates' ? 'active' : ''}`}
+                onClick={() => setActiveSection('templates')}
+              >
+                <Mail size={16} /> Email Templates
+              </button>
+              <button
+                className={`sidebar-item ${activeSection === 'modules' ? 'active' : ''}`}
+                onClick={() => setActiveSection('modules')}
+              >
+                <Gamepad2 size={16} /> Game Modules
+              </button>
+            </>
+          )}
+        </aside>
 
-        <section className="account-card">
-          <h2><ShieldCheck size={18} /> Security</h2>
-          <label>
-            Current password
-            <input type="password" name="current_password" value={passwords.current_password} onChange={handlePasswordChange} />
-          </label>
-          <label>
-            New password
-            <input type="password" name="new_password" value={passwords.new_password} onChange={handlePasswordChange} />
-          </label>
-          <button className="btn-primary" disabled={saving} onClick={updatePassword}>
-            Update password
-          </button>
-          <div className="account-divider"></div>
-          <button className="btn-danger" disabled={saving} onClick={deleteAccount}>
-            <Trash2 size={16} /> Deactivate account
-          </button>
-          <p className="account-note">Email: {user?.email || '—'}</p>
-        </section>
-      </div>
-
-      {isAdmin && (
-        <div className="account-admin">
-          <h2><Mail size={18} /> Email Templates</h2>
-          {templatesLoading ? (
-            <p>Loading templates...</p>
-          ) : (
-            <div className="admin-grid">
-              {templates.map((template) => (
-                <div key={template.id} className="admin-card">
-                  <div className="admin-card-header">
-                    <strong>{template.key}</strong>
-                    <label className="toggle">
-                      <input
-                        type="checkbox"
-                        checked={template.is_active}
-                        onChange={(event) => handleTemplateChange(template.id, 'is_active', event.target.checked)}
-                      />
-                      <span>Active</span>
-                    </label>
-                  </div>
-                  <label>
-                    Name
-                    <input
-                      value={template.name}
-                      onChange={(event) => handleTemplateChange(template.id, 'name', event.target.value)}
-                    />
-                  </label>
-                  <label>
-                    Subject
-                    <input
-                      value={template.subject}
-                      onChange={(event) => handleTemplateChange(template.id, 'subject', event.target.value)}
-                    />
-                  </label>
-                  <label>
-                    Body
-                    <textarea
-                      rows="4"
-                      value={template.body}
-                      onChange={(event) => handleTemplateChange(template.id, 'body', event.target.value)}
-                    />
-                  </label>
-                  <button className="btn-primary" disabled={saving} onClick={() => saveTemplate(template)}>
-                    Save Template
-                  </button>
-                </div>
-              ))}
-            </div>
+        <div className="account-content">
+          {activeSection === 'profile' && (
+            <section className="account-card">
+              <h2><User size={18} /> Profile</h2>
+              <label>
+                Full name
+                <input name="full_name" value={profile.full_name} onChange={handleProfileChange} />
+              </label>
+              <label>
+                School
+                <input name="school" value={profile.school} onChange={handleProfileChange} />
+              </label>
+              <label>
+                Course
+                <input name="course" value={profile.course} onChange={handleProfileChange} />
+              </label>
+              <label>
+                Bio
+                <textarea name="bio" value={profile.bio} onChange={handleProfileChange} rows="3" />
+              </label>
+              <button className="btn-primary" disabled={saving} onClick={saveProfile}>
+                Save profile
+              </button>
+            </section>
           )}
 
-          <h2><Gamepad2 size={18} /> Game Modules</h2>
-          <div className="admin-grid">
-            <div className="admin-card">
-              <h3>Create Module</h3>
+          {activeSection === 'security' && (
+            <section className="account-card">
+              <h2><ShieldCheck size={18} /> Security</h2>
               <label>
-                Module ID
-                <input
-                  value={newModule.module_id}
-                  onChange={(event) => setNewModule({ ...newModule, module_id: event.target.value })}
-                />
+                Current password
+                <input type="password" name="current_password" value={passwords.current_password} onChange={handlePasswordChange} />
               </label>
               <label>
-                Title
-                <input
-                  value={newModule.title}
-                  onChange={(event) => setNewModule({ ...newModule, title: event.target.value })}
-                />
+                New password
+                <input type="password" name="new_password" value={passwords.new_password} onChange={handlePasswordChange} />
               </label>
-              <label>
-                Subject
-                <select
-                  value={newModule.subject}
-                  onChange={(event) => setNewModule({ ...newModule, subject: event.target.value })}
-                >
-                  <option value="physics">Physics</option>
-                  <option value="math">Math</option>
-                  <option value="chemistry">Chemistry</option>
-                  <option value="biology">Biology</option>
-                  <option value="earth-science">Earth & Space</option>
-                </select>
-              </label>
-              <label>
-                Build Path
-                <input
-                  value={newModule.build_path}
-                  onChange={(event) => setNewModule({ ...newModule, build_path: event.target.value })}
-                  placeholder="/games/Force&Motion/index.html"
-                />
-              </label>
-              <button className="btn-primary" disabled={saving} onClick={createModule}>Create Module</button>
-            </div>
+              <button className="btn-primary" disabled={saving} onClick={updatePassword}>
+                Update password
+              </button>
+              <div className="account-divider"></div>
+              <button className="btn-danger" disabled={saving} onClick={deleteAccount}>
+                <Trash2 size={16} /> Deactivate account
+              </button>
+              <p className="account-note">Email: {user?.email || '—'}</p>
+            </section>
+          )}
 
-            {modulesLoading ? (
-              <p>Loading modules...</p>
-            ) : (
-              modules.map((module) => (
-                <div key={module.id} className="admin-card">
-                  <h3>{module.title}</h3>
+          {isAdmin && activeSection === 'templates' && (
+            <section className="account-card">
+              <h2><Mail size={18} /> Email Templates</h2>
+              {templatesLoading ? (
+                <p>Loading templates...</p>
+              ) : (
+                <div className="admin-grid">
+                  {templates.map((template) => (
+                    <div key={template.id} className="admin-card">
+                      <div className="admin-card-header">
+                        <strong>{template.key}</strong>
+                        <label className="toggle">
+                          <input
+                            type="checkbox"
+                            checked={template.is_active}
+                            onChange={(event) => handleTemplateChange(template.id, 'is_active', event.target.checked)}
+                          />
+                          <span>Active</span>
+                        </label>
+                      </div>
+                      <label>
+                        Name
+                        <input
+                          value={template.name}
+                          onChange={(event) => handleTemplateChange(template.id, 'name', event.target.value)}
+                        />
+                      </label>
+                      <label>
+                        Subject
+                        <input
+                          value={template.subject}
+                          onChange={(event) => handleTemplateChange(template.id, 'subject', event.target.value)}
+                        />
+                      </label>
+                      <label>
+                        Body
+                        <textarea
+                          rows="4"
+                          value={template.body}
+                          onChange={(event) => handleTemplateChange(template.id, 'body', event.target.value)}
+                        />
+                      </label>
+                      <button className="btn-primary" disabled={saving} onClick={() => saveTemplate(template)}>
+                        Save Template
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
+          {isAdmin && activeSection === 'modules' && (
+            <section className="account-card">
+              <h2><Gamepad2 size={18} /> Game Modules</h2>
+              <div className="admin-grid">
+                <div className="admin-card">
+                  <h3>Create Module</h3>
+                  <label>
+                    Module ID
+                    <input
+                      value={newModule.module_id}
+                      onChange={(event) => setNewModule({ ...newModule, module_id: event.target.value })}
+                    />
+                  </label>
                   <label>
                     Title
                     <input
-                      value={module.title}
-                      onChange={(event) => handleModuleChange(module.id, 'title', event.target.value)}
+                      value={newModule.title}
+                      onChange={(event) => setNewModule({ ...newModule, title: event.target.value })}
                     />
                   </label>
                   <label>
                     Subject
-                    <input
-                      value={module.subject}
-                      onChange={(event) => handleModuleChange(module.id, 'subject', event.target.value)}
-                    />
+                    <select
+                      value={newModule.subject}
+                      onChange={(event) => setNewModule({ ...newModule, subject: event.target.value })}
+                    >
+                      <option value="physics">Physics</option>
+                      <option value="math">Math</option>
+                      <option value="chemistry">Chemistry</option>
+                      <option value="biology">Biology</option>
+                      <option value="earth-science">Earth & Space</option>
+                    </select>
                   </label>
                   <label>
                     Build Path
                     <input
-                      value={module.build_path || ''}
-                      onChange={(event) => handleModuleChange(module.id, 'build_path', event.target.value)}
+                      value={newModule.build_path}
+                      onChange={(event) => setNewModule({ ...newModule, build_path: event.target.value })}
+                      placeholder="/games/Force&Motion/index.html"
                     />
                   </label>
-                  <label className="toggle">
-                    <input
-                      type="checkbox"
-                      checked={module.is_published}
-                      onChange={(event) => handleModuleChange(module.id, 'is_published', event.target.checked)}
-                    />
-                    <span>Published</span>
-                  </label>
-                  <button className="btn-primary" disabled={saving} onClick={() => saveModule(module)}>
-                    Save Module
-                  </button>
+                  <button className="btn-primary" disabled={saving} onClick={createModule}>Create Module</button>
                 </div>
-              ))
-            )}
-          </div>
+
+                {modulesLoading ? (
+                  <p>Loading modules...</p>
+                ) : (
+                  modules.map((module) => (
+                    <div key={module.id} className="admin-card">
+                      <h3>{module.title}</h3>
+                      <label>
+                        Title
+                        <input
+                          value={module.title}
+                          onChange={(event) => handleModuleChange(module.id, 'title', event.target.value)}
+                        />
+                      </label>
+                      <label>
+                        Subject
+                        <input
+                          value={module.subject}
+                          onChange={(event) => handleModuleChange(module.id, 'subject', event.target.value)}
+                        />
+                      </label>
+                      <label>
+                        Build Path
+                        <input
+                          value={module.build_path || ''}
+                          onChange={(event) => handleModuleChange(module.id, 'build_path', event.target.value)}
+                        />
+                      </label>
+                      <label className="toggle">
+                        <input
+                          type="checkbox"
+                          checked={module.is_published}
+                          onChange={(event) => handleModuleChange(module.id, 'is_published', event.target.checked)}
+                        />
+                        <span>Published</span>
+                      </label>
+                      <button className="btn-primary" disabled={saving} onClick={() => saveModule(module)}>
+                        Save Module
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

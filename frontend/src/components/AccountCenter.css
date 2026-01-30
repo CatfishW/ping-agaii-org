@@ -37,6 +37,48 @@
   gap: 1.5rem;
 }
 
+.account-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 1.5rem;
+}
+
+.account-sidebar {
+  background: white;
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: fit-content;
+}
+
+.sidebar-item {
+  background: transparent;
+  border: none;
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  font-weight: 600;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.sidebar-item.active {
+  background: var(--bg-light);
+  color: var(--primary-color);
+}
+
+.account-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
 .account-card {
   background: white;
   border-radius: 16px;
@@ -141,4 +183,15 @@
   gap: 0.5rem;
   font-weight: 600;
   color: var(--text-color);
+}
+
+@media (max-width: 900px) {
+  .account-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .account-sidebar {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
 }
