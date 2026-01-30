@@ -72,7 +72,12 @@ def ensure_schema_updates():
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "https://ping.agaii.org",
+        "https://game.agaii.org"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
