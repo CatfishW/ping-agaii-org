@@ -330,12 +330,6 @@ const AccountCenter = () => {
                 <Mail size={16} /> Email Templates
               </button>
               <button
-                className={`sidebar-item ${activeSection === 'subjects' ? 'active' : ''}`}
-                onClick={() => setActiveSection('subjects')}
-              >
-                <Tag size={16} /> Subjects
-              </button>
-              <button
                 className={`sidebar-item ${activeSection === 'modules' ? 'active' : ''}`}
                 onClick={() => setActiveSection('modules')}
               >
@@ -371,87 +365,7 @@ const AccountCenter = () => {
             </section>
           )}
 
-          {isAdmin && activeSection === 'subjects' && (
-            <section className="account-card">
-              <h2><Tag size={18} /> Subjects</h2>
-              <div className="admin-grid">
-                <div className="admin-card">
-                  <h3>Create Subject</h3>
-                  <label>
-                    Key
-                    <input
-                      value={newSubject.key}
-                      onChange={(event) => setNewSubject({ ...newSubject, key: event.target.value })}
-                      placeholder="physics"
-                    />
-                  </label>
-                  <label>
-                    Name
-                    <input
-                      value={newSubject.name}
-                      onChange={(event) => setNewSubject({ ...newSubject, name: event.target.value })}
-                      placeholder="Physics"
-                    />
-                  </label>
-                  <label>
-                    Sort Order
-                    <input
-                      type="number"
-                      value={newSubject.sort_order}
-                      onChange={(event) => setNewSubject({ ...newSubject, sort_order: event.target.value })}
-                    />
-                  </label>
-                  <label className="toggle">
-                    <input
-                      type="checkbox"
-                      checked={newSubject.is_active}
-                      onChange={(event) => setNewSubject({ ...newSubject, is_active: event.target.checked })}
-                    />
-                    <span>Active</span>
-                  </label>
-                  <button className="btn-primary" disabled={saving} onClick={createSubject}>Create Subject</button>
-                </div>
-
-                {subjectsLoading ? (
-                  <p>Loading subjects...</p>
-                ) : (
-                  subjects.map((subject) => (
-                    <div key={subject.id} className="admin-card">
-                      <div className="admin-card-header">
-                        <strong>{subject.key}</strong>
-                        <label className="toggle">
-                          <input
-                            type="checkbox"
-                            checked={subject.is_active}
-                            onChange={(event) => handleSubjectChange(subject.id, 'is_active', event.target.checked)}
-                          />
-                          <span>Active</span>
-                        </label>
-                      </div>
-                      <label>
-                        Name
-                        <input
-                          value={subject.name}
-                          onChange={(event) => handleSubjectChange(subject.id, 'name', event.target.value)}
-                        />
-                      </label>
-                      <label>
-                        Sort Order
-                        <input
-                          type="number"
-                          value={subject.sort_order}
-                          onChange={(event) => handleSubjectChange(subject.id, 'sort_order', event.target.value)}
-                        />
-                      </label>
-                      <button className="btn-primary" disabled={saving} onClick={() => saveSubject(subject)}>
-                        Save Subject
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </section>
-          )}
+          
 
           {activeSection === 'security' && (
             <section className="account-card">
@@ -530,6 +444,82 @@ const AccountCenter = () => {
           {isAdmin && activeSection === 'modules' && (
             <section className="account-card">
               <h2><Gamepad2 size={18} /> Game Modules</h2>
+              <div className="admin-grid">
+                <div className="admin-card">
+                  <h3>Subjects</h3>
+                  <label>
+                    Key
+                    <input
+                      value={newSubject.key}
+                      onChange={(event) => setNewSubject({ ...newSubject, key: event.target.value })}
+                      placeholder="physics"
+                    />
+                  </label>
+                  <label>
+                    Name
+                    <input
+                      value={newSubject.name}
+                      onChange={(event) => setNewSubject({ ...newSubject, name: event.target.value })}
+                      placeholder="Physics"
+                    />
+                  </label>
+                  <label>
+                    Sort Order
+                    <input
+                      type="number"
+                      value={newSubject.sort_order}
+                      onChange={(event) => setNewSubject({ ...newSubject, sort_order: event.target.value })}
+                    />
+                  </label>
+                  <label className="toggle">
+                    <input
+                      type="checkbox"
+                      checked={newSubject.is_active}
+                      onChange={(event) => setNewSubject({ ...newSubject, is_active: event.target.checked })}
+                    />
+                    <span>Active</span>
+                  </label>
+                  <button className="btn-primary" disabled={saving} onClick={createSubject}>Create Subject</button>
+                </div>
+
+                {subjectsLoading ? (
+                  <p>Loading subjects...</p>
+                ) : (
+                  subjects.map((subject) => (
+                    <div key={subject.id} className="admin-card">
+                      <div className="admin-card-header">
+                        <strong>{subject.key}</strong>
+                        <label className="toggle">
+                          <input
+                            type="checkbox"
+                            checked={subject.is_active}
+                            onChange={(event) => handleSubjectChange(subject.id, 'is_active', event.target.checked)}
+                          />
+                          <span>Active</span>
+                        </label>
+                      </div>
+                      <label>
+                        Name
+                        <input
+                          value={subject.name}
+                          onChange={(event) => handleSubjectChange(subject.id, 'name', event.target.value)}
+                        />
+                      </label>
+                      <label>
+                        Sort Order
+                        <input
+                          type="number"
+                          value={subject.sort_order}
+                          onChange={(event) => handleSubjectChange(subject.id, 'sort_order', event.target.value)}
+                        />
+                      </label>
+                      <button className="btn-primary" disabled={saving} onClick={() => saveSubject(subject)}>
+                        Save Subject
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
               <div className="admin-grid">
                 <div className="admin-card">
                   <h3>Create Module</h3>
