@@ -19,6 +19,10 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=True)
     hashed_password = Column(String, nullable=True)  # Nullable for OAuth/Guest users
     full_name = Column(String, nullable=True)
+    school = Column(String, nullable=True)
+    course = Column(String, nullable=True)
+    bio = Column(Text, nullable=True)
+    avatar = Column(String, nullable=True)
     
     role = Column(Enum(UserRole), default=UserRole.GUEST)
     is_active = Column(Boolean, default=True)

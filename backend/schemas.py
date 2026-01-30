@@ -8,6 +8,10 @@ class UserBase(BaseModel):
     email: Optional[EmailStr] = None
     username: Optional[str] = None
     full_name: Optional[str] = None
+    school: Optional[str] = None
+    course: Optional[str] = None
+    bio: Optional[str] = None
+    avatar: Optional[str] = None
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -15,6 +19,10 @@ class UserCreate(BaseModel):
     full_name: str
     username: Optional[str] = None
     invite_code: str
+    school: Optional[str] = None
+    course: Optional[str] = None
+    bio: Optional[str] = None
+    avatar: Optional[str] = None
     
     @validator('password')
     def password_strength(cls, v):
@@ -31,6 +39,10 @@ class UserResponse(BaseModel):
     email: Optional[str]
     username: Optional[str]
     full_name: Optional[str]
+    school: Optional[str]
+    course: Optional[str]
+    bio: Optional[str]
+    avatar: Optional[str]
     role: UserRole
     is_active: bool
     is_verified: bool

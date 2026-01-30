@@ -65,6 +65,30 @@ def ensure_schema_updates():
                 ) THEN
                     ALTER TABLE classes ADD COLUMN description TEXT;
                 END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'users' AND column_name = 'school'
+                ) THEN
+                    ALTER TABLE users ADD COLUMN school TEXT;
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'users' AND column_name = 'course'
+                ) THEN
+                    ALTER TABLE users ADD COLUMN course TEXT;
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'users' AND column_name = 'bio'
+                ) THEN
+                    ALTER TABLE users ADD COLUMN bio TEXT;
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'users' AND column_name = 'avatar'
+                ) THEN
+                    ALTER TABLE users ADD COLUMN avatar TEXT;
+                END IF;
             END $$;
         """))
         conn.commit()

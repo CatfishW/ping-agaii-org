@@ -124,6 +124,10 @@ async def register_user(
         username=user_data.username or user_data.email.split('@')[0],
         hashed_password=get_password_hash(user_data.password),
         full_name=user_data.full_name,
+        school=user_data.school,
+        course=user_data.course,
+        bio=user_data.bio,
+        avatar=user_data.avatar,
         role=role,
         is_verified=False,
         organization_id=organization_id

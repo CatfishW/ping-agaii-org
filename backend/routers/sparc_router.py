@@ -38,6 +38,8 @@ class SparcRegisterIn(BaseModel):
     role: str | None = None
     school: str | None = None
     course: str | None = None
+    bio: str | None = None
+    avatar: str | None = None
 
 
 class SparcPasswordUpdate(BaseModel):
@@ -48,6 +50,10 @@ class SparcPasswordUpdate(BaseModel):
 class SparcProfileUpdate(BaseModel):
     username: str | None = None
     email: str | None = None
+    school: str | None = None
+    course: str | None = None
+    bio: str | None = None
+    avatar: str | None = None
 
 
 class SparcSessionStart(BaseModel):
@@ -121,6 +127,11 @@ def build_sparc_user(db: Session, user: User) -> dict:
         "email": user.email,
         "username": username,
         "role": map_sparc_role(user),
+        "school": user.school,
+        "course": user.course,
+        "bio": user.bio,
+        "avatar": user.avatar,
+        "createdAt": user.created_at.isoformat() if user.created_at else None,
         "stats": {
             "gamesPlayed": games_played,
             "totalScore": total_score,
@@ -336,6 +347,10 @@ def sparc_register(payload: SparcRegisterIn, request: Request, db: Session = Dep
         email=payload.email,
         username=payload.username,
         full_name=payload.username,
+        school=payload.school,
+        course=payload.course,
+        bio=payload.bio,
+        avatar=payload.avatar,
         hashed_password=get_password_hash(payload.password),
         role=role,
         is_verified=False,
@@ -402,9 +417,18 @@ def sparc_update_profile(
         current_user.username = payload.username
     if payload.email:
         current_user.email = payload.email
+    if payload.school is not None:
+        current_user.school = payload.school
+    if payload.course is not None:
+        current_user.course = payload.course
+    if payload.bio is not None:
+        current_user.bio = payload.bio
+    if payload.avatar is not None:
+        current_user.avatar = payload.avatar
     db.commit()
     db.refresh(current_user)
-    return {"user": build_sparc_user(db, current_user)}
+    user_payload = build_sparc_user(db, current_user)
+    return {"user": user_payload, "data": user_payload}
 
 
 @router.get("/users/leaderboard")
