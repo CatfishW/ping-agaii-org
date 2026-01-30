@@ -5,9 +5,9 @@ import random
 import string
 
 from database import get_db
-from models import InviteCode, InviteRole, User, UserRole, Class
+from models import InviteCode, InviteRole, User, UserRole, Class, EmailTemplate
 from schemas import InviteCreate, InviteResponse
-from email_service import send_email
+from email_service import send_email, render_template
 from routers.auth_router import get_current_user
 
 router = APIRouter(prefix="/api/invites", tags=["invites"])
@@ -28,6 +28,12 @@ def build_invite_email(invite: InviteCode, role_label: str) -> tuple[str, str]:
         f"Expires: {invite.expires_at or 'No expiry'}\n\n"
         f"Use this code during registration."
     )
+    return subject, body
+
+
+def build_template_email(template: EmailTemplate, context: dict) -> tuple[str, str]:
+    subject = render_template(template.subject, context)
+    body = render_template(template.body, context)
     return subject, body
 
 
@@ -74,7 +80,18 @@ async def create_teacher_invite(
     db.refresh(invite)
 
     if invite_data.recipient_email:
-        subject, body = build_invite_email(invite, "Teacher")
+        template = db.query(EmailTemplate).filter(
+            EmailTemplate.key == "invite_teacher",
+            EmailTemplate.is_active == True
+        ).first()
+        if template:
+            subject, body = build_template_email(template, {
+                "invite_code": invite.code,
+                "role": "Teacher",
+                "expires_at": invite.expires_at or "No expiry"
+            })
+        else:
+            subject, body = build_invite_email(invite, "Teacher")
         send_email(invite_data.recipient_email, subject, body)
     return invite
 
@@ -127,7 +144,18 @@ async def create_student_invite(
     db.refresh(invite)
 
     if invite_data.recipient_email:
-        subject, body = build_invite_email(invite, "Student")
+        template = db.query(EmailTemplate).filter(
+            EmailTemplate.key == "invite_student",
+            EmailTemplate.is_active == True
+        ).first()
+        if template:
+            subject, body = build_template_email(template, {
+                "invite_code": invite.code,
+                "role": "Student",
+                "expires_at": invite.expires_at or "No expiry"
+            })
+        else:
+            subject, body = build_invite_email(invite, "Student")
         send_email(invite_data.recipient_email, subject, body)
     return invite
 

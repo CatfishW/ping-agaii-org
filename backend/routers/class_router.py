@@ -29,6 +29,16 @@ def verify_teacher_access(current_user: User):
             detail="Only teachers and admins can access this resource"
         )
 
+
+def get_class_module_ids(db: Session, class_obj: Class) -> List[str]:
+    module_ids = db.query(Module.module_id).join(
+        ModuleWhitelist, ModuleWhitelist.module_id == Module.id
+    ).filter(
+        ModuleWhitelist.organization_id == class_obj.organization_id,
+        ModuleWhitelist.is_enabled == True
+    ).all()
+    return [module_id for (module_id,) in module_ids]
+
 @router.post("/", response_model=ClassResponse)
 async def create_class(
     class_data: ClassCreate,
@@ -58,20 +68,10 @@ async def create_class(
         is_active=True
     )
 
-
-def get_class_module_ids(db: Session, class_obj: Class) -> List[str]:
-    module_ids = db.query(Module.module_id).join(
-        ModuleWhitelist, ModuleWhitelist.module_id == Module.id
-    ).filter(
-        ModuleWhitelist.organization_id == class_obj.organization_id,
-        ModuleWhitelist.is_enabled == True
-    ).all()
-    return [module_id for (module_id,) in module_ids]
-    
     db.add(new_class)
     db.commit()
     db.refresh(new_class)
-    
+
     return new_class
 
 @router.get("/", response_model=List[ClassResponse])

@@ -64,6 +64,14 @@ const SimulationBrowser = ({ searchQuery }) => {
     return 'badge-classic';
   };
 
+  const subjectImages = {
+    physics: '/images/force_motion_cover.png',
+    math: '/images/math_thumb.png',
+    chemistry: '/images/chemistry_thumb.png',
+    biology: '/images/biology_thumb.png',
+    'earth-science': '/images/earth_science_thumb.png'
+  };
+
   if (loading) {
     return <div className="loading">Loading simulations...</div>;
   }
@@ -110,7 +118,11 @@ const SimulationBrowser = ({ searchQuery }) => {
           {simulations.length === 0 ? (
             <div className="no-results">No simulations found</div>
           ) : (
-            simulations.map((sim) => (
+            simulations.map((sim) => {
+              const simUrl = sim.build_path || `/game/${sim.module_id}`;
+              const simImage = sim.image || subjectImages[sim.subject] || '/images/force_motion_cover.png';
+              const simTags = sim.tags && sim.tags.length ? sim.tags : [sim.subject];
+              return (
               <div key={sim.id} className="sim-card">
                 {sim.badge && (
                   <span className={`sim-badge ${getBadgeClass(sim.badge)}`}>
@@ -118,23 +130,23 @@ const SimulationBrowser = ({ searchQuery }) => {
                   </span>
                 )}
                 <div className="sim-image-container">
-                  <img src={sim.image} alt={sim.title} className="sim-image" />
+                  <img src={simImage} alt={sim.title} className="sim-image" />
                 </div>
                 <div className="sim-info">
                   <h3 className="sim-title">{sim.title}</h3>
                   <p className="sim-description">{sim.description}</p>
                   <div className="sim-tags">
-                    {sim.tags.map((tag, index) => (
+                    {simTags.map((tag, index) => (
                       <span key={index} className="sim-tag">{tag}</span>
                     ))}
                   </div>
-                  {sim.url.startsWith('/game/') ? (
-                    <Link to={sim.url} className="sim-btn">
+                  {simUrl.startsWith('/game/') ? (
+                    <Link to={simUrl} className="sim-btn">
                       Launch Simulation
                     </Link>
                   ) : (
                     <a
-                      href={sim.url}
+                      href={simUrl}
                       className="sim-btn"
                       target="_blank"
                       rel="noopener noreferrer"
@@ -144,7 +156,7 @@ const SimulationBrowser = ({ searchQuery }) => {
                   )}
                 </div>
               </div>
-            ))
+            )})
           )}
         </div>
       </div>

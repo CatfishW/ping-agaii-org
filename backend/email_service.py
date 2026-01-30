@@ -9,6 +9,7 @@ def send_email(recipient: str, subject: str, body: str) -> None:
     user = os.getenv("SMTP_USER")
     password = os.getenv("SMTP_PASSWORD")
     sender = os.getenv("SMTP_FROM", user)
+    sender_name = os.getenv("SMTP_FROM_NAME")
     use_tls = os.getenv("SMTP_TLS", "true").lower() == "true"
     use_ssl = os.getenv("SMTP_SSL", "false").lower() == "true"
 
@@ -17,7 +18,10 @@ def send_email(recipient: str, subject: str, body: str) -> None:
 
     message = EmailMessage()
     message["Subject"] = subject
-    message["From"] = sender
+    if sender_name:
+        message["From"] = f"{sender_name} <{sender}>"
+    else:
+        message["From"] = sender
     message["To"] = recipient
     message.set_content(body)
 
@@ -36,3 +40,10 @@ def send_email(recipient: str, subject: str, body: str) -> None:
         server.send_message(message)
     finally:
         server.quit()
+
+
+def render_template(content: str, context: dict) -> str:
+    result = content
+    for key, value in context.items():
+        result = result.replace(f"{{{{{key}}}}}", str(value))
+    return result

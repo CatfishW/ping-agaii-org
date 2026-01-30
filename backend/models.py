@@ -251,6 +251,20 @@ class InviteUse(Base):
     user_agent = Column(String, nullable=True)
 
 
+class EmailTemplate(Base):
+    __tablename__ = "email_templates"
+
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String, nullable=False)
+    subject = Column(Text, nullable=False)
+    body = Column(Text, nullable=False)
+    is_active = Column(Boolean, default=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
 class SparcWordGameScore(Base):
     __tablename__ = "sparc_wordgame_scores"
 

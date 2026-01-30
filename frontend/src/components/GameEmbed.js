@@ -17,16 +17,27 @@ const GameEmbed = () => {
   const [isCheckingConsent, setIsCheckingConsent] = useState(true);
   const [telemetrySession, setTelemetrySession] = useState(null);
   const [telemetryStats, setTelemetryStats] = useState(null);
+  const [moduleInfo, setModuleInfo] = useState(null);
   const iframeRef = useRef(null);
 
   useEffect(() => {
     checkConsent();
+    fetchModule();
     
     // Cleanup on unmount
     return () => {
       endTelemetrySession();
     };
   }, [user]);
+
+  const fetchModule = async () => {
+    try {
+      const response = await axios.get(`/api/simulations/${gameId}`);
+      setModuleInfo(response.data);
+    } catch (error) {
+      console.error('Error loading module info:', error);
+    }
+  };
 
   useEffect(() => {
     // Start telemetry when consent is granted and game loads
@@ -99,9 +110,10 @@ const GameEmbed = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      const moduleId = moduleInfo?.module_id || gameId;
       const response = await axios.post(
         '/api/telemetry/session/start',
-        { module_id: 1 }, // TODO: Get actual module_id from game
+        { module_id: moduleId },
         { headers }
       );
 
@@ -113,7 +125,7 @@ const GameEmbed = () => {
         sessionId: sessionData.session_id,
         userId: sessionData.user_id,
         guestId: sessionData.guest_id,
-        moduleId: 1,
+        moduleId,
         consentGranted: true,
         orgSettings: sessionData.org_settings
       });
@@ -181,6 +193,9 @@ const GameEmbed = () => {
   }, [hasConsent]);
 
   const getGameUrl = () => {
+    if (moduleInfo?.build_path) {
+      return moduleInfo.build_path;
+    }
     if (gameId === 'forces-motion-basics') {
       return '/games/Force&Motion/index.html';
     }

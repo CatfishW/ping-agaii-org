@@ -6,7 +6,7 @@ import os
 import uuid
 
 from database import get_db
-from models import User, ConsentRecord, UserRole, InviteCode, InviteUse, InviteRole, Class, ClassStudent
+from models import User, ConsentRecord, UserRole, InviteCode, InviteUse, InviteRole, Class, ClassStudent, EmailTemplate
 from schemas import (
     UserCreate, UserLogin, UserResponse, Token,
     GuestSessionCreate, GuestSessionResponse,
@@ -16,6 +16,7 @@ from auth import (
     verify_password, get_password_hash, 
     create_access_token, verify_token
 )
+from email_service import send_email, render_template
 
 from sqlalchemy import or_
 
@@ -178,6 +179,18 @@ async def register_user(
 
     db.commit()
     db.refresh(new_user)
+
+    template = db.query(EmailTemplate).filter(
+        EmailTemplate.key == "welcome_user",
+        EmailTemplate.is_active == True
+    ).first()
+    if template and new_user.email:
+        try:
+            subject = render_template(template.subject, {"user_name": new_user.full_name or new_user.username})
+            body = render_template(template.body, {"user_name": new_user.full_name or new_user.username})
+            send_email(new_user.email, subject, body)
+        except Exception:
+            pass
     
     return new_user
 

@@ -6,10 +6,12 @@ from sqlalchemy.orm import Session
 import json
 
 from database import engine, get_db, SessionLocal
-from models import Base, User, UserRole, Organization
+from models import Base, User, UserRole, Organization, Module, EmailTemplate, ModuleWhitelist
 from routers import auth_router
 from routers import telemetry_router
 from routers import class_router
+from routers import admin_router
+from routers import simulation_router
 from routers import invite_router
 from routers import dashboard_router
 from routers import sparc_router
@@ -30,6 +32,8 @@ def seed_apps():
     try:
         default_org_id = ensure_default_org(db)
         ensure_default_apps(db)
+        ensure_default_modules(db)
+        ensure_default_email_templates(db)
         ensure_admin_user(db, default_org_id)
         ensure_teacher_user(db, default_org_id)
         ensure_schema_updates()
@@ -104,6 +108,82 @@ def ensure_teacher_user(db: Session, organization_id: int):
     db.commit()
 
 
+def ensure_default_modules(db: Session):
+    existing = db.query(Module).filter(Module.module_id == "forces-motion-basics").first()
+    if existing:
+        if not existing.build_path:
+            existing.build_path = "/games/Force&Motion/index.html"
+            existing.is_published = True
+            db.commit()
+        ensure_module_whitelist(db, existing, 1)
+        return
+
+    module = Module(
+        module_id="forces-motion-basics",
+        title="Forces and Motion: Basics",
+        description="Learn forces, motion, and driving dynamics.",
+        subject="physics",
+        build_path="/games/Force&Motion/index.html",
+        is_published=True,
+        version="1.0.0"
+    )
+    db.add(module)
+    db.commit()
+    db.refresh(module)
+    ensure_module_whitelist(db, module, 1)
+
+
+def ensure_module_whitelist(db: Session, module: Module, organization_id: int):
+    existing = db.query(ModuleWhitelist).filter(
+        ModuleWhitelist.organization_id == organization_id,
+        ModuleWhitelist.module_id == module.id
+    ).first()
+    if existing:
+        if not existing.is_enabled:
+            existing.is_enabled = True
+            db.commit()
+        return
+    db.add(ModuleWhitelist(
+        organization_id=organization_id,
+        module_id=module.id,
+        is_enabled=True
+    ))
+    db.commit()
+
+
+def ensure_default_email_templates(db: Session):
+    templates = {
+        "invite_teacher": {
+            "name": "Teacher Invite",
+            "subject": "Your teacher invite code",
+            "body": "You have been invited to PING.\nInvite code: {{invite_code}}\nRole: Teacher\nExpires: {{expires_at}}\n"
+        },
+        "invite_student": {
+            "name": "Student Invite",
+            "subject": "Your student invite code",
+            "body": "You have been invited to PING.\nInvite code: {{invite_code}}\nRole: Student\nExpires: {{expires_at}}\n"
+        },
+        "welcome_user": {
+            "name": "Welcome",
+            "subject": "Welcome to PING",
+            "body": "Hello {{user_name}},\nWelcome to PING. Your account is ready."
+        }
+    }
+
+    for key, data in templates.items():
+        existing = db.query(EmailTemplate).filter(EmailTemplate.key == key).first()
+        if existing:
+            continue
+        db.add(EmailTemplate(
+            key=key,
+            name=data["name"],
+            subject=data["subject"],
+            body=data["body"],
+            is_active=True
+        ))
+    db.commit()
+
+
 def ensure_schema_updates():
     with engine.connect() as conn:
         conn.execute(text("""
@@ -161,9 +241,11 @@ app.add_middleware(
 app.include_router(auth_router.router)
 app.include_router(telemetry_router.router)
 app.include_router(class_router.router)
+app.include_router(simulation_router.router)
 app.include_router(invite_router.router)
 app.include_router(dashboard_router.router)
 app.include_router(sparc_router.router)
+app.include_router(admin_router.router)
 
 class Simulation(BaseModel):
     id: str

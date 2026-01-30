@@ -188,6 +188,62 @@ class PasswordUpdate(BaseModel):
     current_password: str
     new_password: str
 
+
+class EmailTemplateUpdate(BaseModel):
+    name: Optional[str] = None
+    subject: Optional[str] = None
+    body: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class EmailTemplateResponse(BaseModel):
+    id: int
+    key: str
+    name: str
+    subject: str
+    body: str
+    is_active: bool
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class ModuleCreate(BaseModel):
+    module_id: str
+    title: str
+    description: Optional[str] = None
+    subject: str
+    build_path: Optional[str] = None
+    is_published: bool = True
+    version: Optional[str] = "1.0.0"
+
+
+class ModuleUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    subject: Optional[str] = None
+    build_path: Optional[str] = None
+    is_published: Optional[bool] = None
+    version: Optional[str] = None
+
+
+class ModuleResponse(BaseModel):
+    id: int
+    module_id: str
+    title: str
+    description: Optional[str]
+    subject: str
+    build_path: Optional[str]
+    is_published: bool
+    version: Optional[str]
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
 # Telemetry Schemas
 class TelemetrySessionCreate(BaseModel):
     module_id: int
