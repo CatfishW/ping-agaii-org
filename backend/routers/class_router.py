@@ -6,7 +6,7 @@ import random
 import string
 
 from database import get_db
-from models import User, Class, Module, BehaviorData, UserRole, ClassStudent
+from models import User, Class, Module, ModuleWhitelist, BehaviorData, UserRole, ClassStudent
 from schemas import (
     ClassCreate, ClassUpdate, ClassResponse, ClassWithStats,
     JoinCodeValidate, JoinClassRequest, StudentProgress
@@ -57,6 +57,16 @@ async def create_class(
         join_code=join_code,
         is_active=True
     )
+
+
+def get_class_module_ids(db: Session, class_obj: Class) -> List[str]:
+    module_ids = db.query(Module.module_id).join(
+        ModuleWhitelist, ModuleWhitelist.module_id == Module.id
+    ).filter(
+        ModuleWhitelist.organization_id == class_obj.organization_id,
+        ModuleWhitelist.is_enabled == True
+    ).all()
+    return [module_id for (module_id,) in module_ids]
     
     db.add(new_class)
     db.commit()
@@ -104,8 +114,9 @@ async def get_class_details(
     
     # Verify teacher owns this class
     if class_obj.teacher_id != current_user.id:
-        # Allow org admins to view all classes in their org
-        if current_user.role != UserRole.ORG_ADMIN or class_obj.organization_id != current_user.organization_id:
+        if current_user.role == UserRole.PLATFORM_ADMIN:
+            pass
+        elif current_user.role != UserRole.ORG_ADMIN or class_obj.organization_id != current_user.organization_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have access to this class"
@@ -113,24 +124,24 @@ async def get_class_details(
     
     # Calculate statistics
     # Count unique students (both registered and guests)
-    student_count = db.query(BehaviorData.user_id).filter(
-        BehaviorData.module_id.in_(
-            db.query(Module.id).filter(Module.id.in_([m.id for m in class_obj.modules]))
-        )
-    ).distinct().count()
-    
-    guest_count = db.query(BehaviorData.guest_session_id).filter(
-        BehaviorData.guest_session_id.isnot(None),
-        BehaviorData.module_id.in_(
-            db.query(Module.id).filter(Module.id.in_([m.id for m in class_obj.modules]))
-        )
-    ).distinct().count()
-    
-    total_sessions = db.query(BehaviorData.session_id).filter(
-        BehaviorData.module_id.in_(
-            db.query(Module.id).filter(Module.id.in_([m.id for m in class_obj.modules]))
-        )
-    ).distinct().count()
+    module_ids = get_class_module_ids(db, class_obj)
+    if module_ids:
+        student_count = db.query(BehaviorData.user_id).filter(
+            BehaviorData.module_id.in_(module_ids)
+        ).distinct().count()
+
+        guest_count = db.query(BehaviorData.guest_session_id).filter(
+            BehaviorData.guest_session_id.isnot(None),
+            BehaviorData.module_id.in_(module_ids)
+        ).distinct().count()
+
+        total_sessions = db.query(BehaviorData.session_id).filter(
+            BehaviorData.module_id.in_(module_ids)
+        ).distinct().count()
+    else:
+        student_count = 0
+        guest_count = 0
+        total_sessions = 0
     
     # Build response with stats
     response = ClassWithStats(
@@ -138,7 +149,7 @@ async def get_class_details(
         student_count=student_count,
         guest_count=guest_count,
         total_sessions=total_sessions,
-        module_count=len(class_obj.modules)
+        module_count=len(module_ids)
     )
     
     return response
@@ -319,7 +330,9 @@ async def get_class_students(
     
     # Verify ownership
     if class_obj.teacher_id != current_user.id:
-        if current_user.role != UserRole.ORG_ADMIN or class_obj.organization_id != current_user.organization_id:
+        if current_user.role == UserRole.PLATFORM_ADMIN:
+            pass
+        elif current_user.role != UserRole.ORG_ADMIN or class_obj.organization_id != current_user.organization_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have access to this class"
@@ -328,23 +341,27 @@ async def get_class_students(
     students_data = []
     
     # Get registered students who participated
+    module_ids = get_class_module_ids(db, class_obj)
+    if not module_ids:
+        return []
+
     registered_students = db.query(User).join(
         BehaviorData, User.id == BehaviorData.user_id
     ).filter(
-        BehaviorData.module_id.in_([m.id for m in class_obj.modules])
+        BehaviorData.module_id.in_(module_ids)
     ).distinct().all()
     
     for student in registered_students:
         # Get student's sessions
         sessions = db.query(BehaviorData.session_id).filter(
             BehaviorData.user_id == student.id,
-            BehaviorData.module_id.in_([m.id for m in class_obj.modules])
+            BehaviorData.module_id.in_(module_ids)
         ).distinct().all()
         
         # Get total events
         total_events = db.query(BehaviorData).filter(
             BehaviorData.user_id == student.id,
-            BehaviorData.module_id.in_([m.id for m in class_obj.modules])
+            BehaviorData.module_id.in_(module_ids)
         ).count()
         
         # Get last active time
@@ -365,20 +382,20 @@ async def get_class_students(
     # Get guest students
     guest_sessions = db.query(BehaviorData.guest_session_id).filter(
         BehaviorData.guest_session_id.isnot(None),
-        BehaviorData.module_id.in_([m.id for m in class_obj.modules])
+        BehaviorData.module_id.in_(module_ids)
     ).distinct().all()
     
     for (guest_id,) in guest_sessions:
         # Get guest's sessions
         sessions = db.query(BehaviorData.session_id).filter(
             BehaviorData.guest_session_id == guest_id,
-            BehaviorData.module_id.in_([m.id for m in class_obj.modules])
+            BehaviorData.module_id.in_(module_ids)
         ).distinct().all()
         
         # Get total events
         total_events = db.query(BehaviorData).filter(
             BehaviorData.guest_session_id == guest_id,
-            BehaviorData.module_id.in_([m.id for m in class_obj.modules])
+            BehaviorData.module_id.in_(module_ids)
         ).count()
         
         # Get last active time

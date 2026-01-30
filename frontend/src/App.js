@@ -16,6 +16,7 @@ import TeachingPublic from './components/TeachingPublic';
 import Initiatives from './components/Initiatives';
 import Dashboard from './components/Dashboard';
 import AccountCenter from './components/AccountCenter';
+import ResearchHub from './components/ResearchHub';
 import './App.css';
 
 const TeachingGate = ({ onLoginClick, children }) => {
@@ -75,7 +76,7 @@ function App() {
             />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/account" element={<AccountCenter />} />
-            <Route path="/research" element={<div className="container"><h1>Research</h1></div>} />
+            <Route path="/research" element={<ResearchHub />} />
             <Route path="/initiatives" element={<Initiatives />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />

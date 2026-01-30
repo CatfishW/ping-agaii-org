@@ -1,0 +1,72 @@
+.research-hub {
+  max-width: 1100px;
+  margin: 2.5rem auto;
+  padding: 0 1.5rem 3rem;
+}
+
+.research-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.research-pill {
+  display: inline-block;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(87, 21, 11, 0.12);
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.08rem;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.research-hero h1 {
+  font-size: 2rem;
+  color: var(--primary-color);
+  margin-bottom: 0.4rem;
+}
+
+.research-hero p {
+  color: var(--text-muted);
+}
+
+.research-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.research-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.research-card-header {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+}
+
+.research-card h2 {
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.research-card p {
+  margin: 0.4rem 0 0;
+  color: var(--text-muted);
+}
+
+.research-note {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
