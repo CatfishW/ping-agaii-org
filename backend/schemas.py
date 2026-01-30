@@ -246,13 +246,13 @@ class ModuleResponse(BaseModel):
 
 # Telemetry Schemas
 class TelemetrySessionCreate(BaseModel):
-    module_id: int
+    module_id: str
     
 class TelemetryEventCreate(BaseModel):
     session_id: str
     user_id: Optional[int] = None
     guest_id: Optional[str] = None
-    module_id: int
+    module_id: str
     event_type: str
     payload: dict
     timestamp: str

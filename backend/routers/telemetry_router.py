@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timedelta
@@ -24,7 +24,7 @@ def anonymize_user_id(user_id: Optional[int], guest_id: Optional[str]) -> str:
 
 @router.post("/session/start")
 async def start_telemetry_session(
-    session_data: TelemetrySessionCreate,
+    session_data: dict = Body(default_factory=dict),
     current_user: User | None = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
@@ -48,6 +48,9 @@ async def start_telemetry_session(
         "max_events_per_session": 10000
     }
     
+    if "module_id" not in session_data:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="module_id is required")
+
     # Create session record (optional: store in DB)
     # For MVP, we can just return the session_id and let frontend manage it
     
