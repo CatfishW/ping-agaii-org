@@ -94,15 +94,15 @@ const GameEmbed = () => {
   const startTelemetrySession = async () => {
     try {
       const token = localStorage.getItem('access_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await axios.post(
         '/api/telemetry/session/start',
         { module_id: 1 }, // TODO: Get actual module_id from game
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
+        { headers }
       );
 
       const sessionData = response.data;
@@ -150,14 +150,16 @@ const GameEmbed = () => {
       await telemetryService.endSession();
       
       const token = localStorage.getItem('access_token');
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
       await axios.post(
         '/api/telemetry/session/end',
         null,
         {
           params: { session_id: telemetrySession.session_id },
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers
         }
       );
 
@@ -180,7 +182,7 @@ const GameEmbed = () => {
 
   const getGameUrl = () => {
     if (gameId === 'forces-motion-basics') {
-      return '/Force&Motion/index.html';
+      return '/games/Force&Motion/index.html';
     }
     return '#';
   };

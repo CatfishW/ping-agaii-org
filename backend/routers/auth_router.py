@@ -22,6 +22,7 @@ from sqlalchemy import or_
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 # Dependency to get current user
 async def get_current_user(
@@ -53,6 +54,26 @@ async def get_current_user(
         raise credentials_exception
     
     return user
+
+
+async def get_optional_user(
+    token: str | None = Depends(oauth2_scheme_optional),
+    db: Session = Depends(get_db)
+):
+    if not token:
+        return None
+
+    payload = verify_token(token)
+    if payload is None:
+        return None
+
+    email = payload.get("sub")
+    user_id = payload.get("user_id")
+    if user_id:
+        return db.query(User).filter(User.id == user_id).first()
+    if email:
+        return db.query(User).filter(User.email == email).first()
+    return None
 
 # User Registration
 @router.post("/register", response_model=UserResponse)
@@ -119,11 +140,14 @@ async def register_user(
             )
         organization_id = class_obj.organization_id
 
+    username = user_data.username or user_data.email.split('@')[0]
+    full_name = user_data.full_name or username
+
     new_user = User(
         email=user_data.email,
-        username=user_data.username or user_data.email.split('@')[0],
+        username=username,
         hashed_password=get_password_hash(user_data.password),
-        full_name=user_data.full_name,
+        full_name=full_name,
         school=user_data.school,
         course=user_data.course,
         bio=user_data.bio,

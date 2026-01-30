@@ -15,6 +15,7 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [overlayClick, setOverlayClick] = useState(false);
 
   const { login, register } = useAuth();
 
@@ -62,9 +63,24 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login' }) => {
     setLoading(false);
   };
 
+  const handleOverlayMouseDown = (event) => {
+    setOverlayClick(event.target === event.currentTarget);
+  };
+
+  const handleOverlayMouseUp = (event) => {
+    if (overlayClick && event.target === event.currentTarget) {
+      onClose();
+    }
+    setOverlayClick(false);
+  };
+
   return (
-    <div className="auth-modal-overlay" onClick={onClose}>
-      <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="auth-modal-overlay"
+      onMouseDown={handleOverlayMouseDown}
+      onMouseUp={handleOverlayMouseUp}
+    >
+      <div className="auth-modal" onMouseDown={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>
           <X size={24} />
         </button>

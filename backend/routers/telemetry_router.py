@@ -9,7 +9,7 @@ import hashlib
 from database import get_db
 from models import User, BehaviorData, UserRole
 from schemas import TelemetrySessionCreate, TelemetryEventCreate, TelemetryEventBatch
-from routers.auth_router import get_current_user
+from routers.auth_router import get_current_user, get_optional_user
 
 router = APIRouter(prefix="/api/telemetry", tags=["telemetry"])
 
@@ -25,7 +25,7 @@ def anonymize_user_id(user_id: Optional[int], guest_id: Optional[str]) -> str:
 @router.post("/session/start")
 async def start_telemetry_session(
     session_data: TelemetrySessionCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -51,10 +51,16 @@ async def start_telemetry_session(
     # Create session record (optional: store in DB)
     # For MVP, we can just return the session_id and let frontend manage it
     
+    user_id = None
+    guest_id = None
+    if current_user:
+        user_id = current_user.id if current_user.role != UserRole.GUEST else None
+        guest_id = current_user.guest_id if current_user.role == UserRole.GUEST else None
+
     return {
         "session_id": session_id,
-        "user_id": current_user.id if current_user.role != UserRole.GUEST else None,
-        "guest_id": current_user.guest_id if current_user.role == UserRole.GUEST else None,
+        "user_id": user_id,
+        "guest_id": guest_id,
         "org_settings": org_settings,
         "started_at": datetime.utcnow().isoformat()
     }
@@ -62,7 +68,7 @@ async def start_telemetry_session(
 @router.post("/events")
 async def upload_telemetry_events(
     batch: TelemetryEventBatch,
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -74,10 +80,13 @@ async def upload_telemetry_events(
     session_id = batch.session_id
     
     # Anonymize user identifier
-    anonymized_id = anonymize_user_id(
-        current_user.id if current_user.role != UserRole.GUEST else None,
-        current_user.guest_id if current_user.role == UserRole.GUEST else None
-    )
+    if current_user:
+        anonymized_id = anonymize_user_id(
+            current_user.id if current_user.role != UserRole.GUEST else None,
+            current_user.guest_id if current_user.role == UserRole.GUEST else None
+        )
+    else:
+        anonymized_id = anonymize_user_id(None, None)
     
     # Process each event
     saved_events = []
@@ -89,9 +98,15 @@ async def upload_telemetry_events(
         # Create behavior data record
         payload_data = dict(event.payload)
         payload_data["anon_id"] = anonymized_id
+        user_id = None
+        guest_id = None
+        if current_user:
+            user_id = current_user.id if current_user.role != UserRole.GUEST else None
+            guest_id = current_user.guest_id if current_user.role == UserRole.GUEST else None
+
         behavior_record = BehaviorData(
-            user_id=current_user.id if current_user.role != UserRole.GUEST else None,
-            guest_session_id=current_user.guest_id if current_user.role == UserRole.GUEST else None,
+            user_id=user_id,
+            guest_session_id=guest_id,
             module_id=event.module_id,
             session_id=session_id,
             event_type=event.event_type,
@@ -113,7 +128,7 @@ async def upload_telemetry_events(
 @router.post("/session/end")
 async def end_telemetry_session(
     session_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
     """

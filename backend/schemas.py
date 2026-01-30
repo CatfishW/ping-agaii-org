@@ -16,19 +16,13 @@ class UserBase(BaseModel):
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
-    full_name: str
+    full_name: Optional[str] = None
     username: Optional[str] = None
     invite_code: str
     school: Optional[str] = None
     course: Optional[str] = None
     bio: Optional[str] = None
     avatar: Optional[str] = None
-    
-    @validator('password')
-    def password_strength(cls, v):
-        if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters')
-        return v
 
 class UserLogin(BaseModel):
     email: EmailStr
