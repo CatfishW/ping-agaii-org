@@ -186,7 +186,7 @@ const AdminTelemetry = () => {
         <button
           className="btn-secondary"
           onClick={() => fetchSessions(Math.max(offset - limit, 0))}
-          disabled={offset == 0 || loading}
+          disabled={offset === 0 || loading}
         >
           Previous
         </button>

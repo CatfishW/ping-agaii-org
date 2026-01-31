@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, User, ChevronDown, Sparkles, LogOut, Settings } from 'lucide-react';
+import { Search, User, ChevronDown, Sparkles, LogOut, Settings, Database } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './Header.css';
 
