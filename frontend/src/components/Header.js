@@ -108,6 +108,12 @@ const Header = ({ currentPage, setCurrentPage, setSearchQuery, onLoginClick }) =
                         <Settings size={16} />
                         Account Center
                       </Link>
+                      {isAdmin && (
+                        <Link to="/admin/telemetry" onClick={() => setShowUserMenu(false)}>
+                          <Database size={16} />
+                          Telemetry Data
+                        </Link>
+                      )}
                       <button onClick={() => { logout(); setShowUserMenu(false); }}>
                         <LogOut size={16} />
                         Sign Out

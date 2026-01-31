@@ -1,0 +1,130 @@
+.telemetry-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.telemetry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.telemetry-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.telemetry-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 1.5rem;
+}
+
+.telemetry-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.telemetry-filters input,
+.telemetry-filters select {
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #d7dce1;
+  font-size: 0.95rem;
+}
+
+.telemetry-message {
+  background: #fff6db;
+  color: #8a5b10;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.telemetry-table {
+  background: white;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+
+.telemetry-row {
+  display: grid;
+  grid-template-columns: 1.4fr 2fr 0.6fr 0.8fr 1.3fr 1.3fr 0.6fr;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #eef1f4;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.telemetry-head {
+  background: #f4f6f8;
+  font-weight: 700;
+  color: #3b3f45;
+}
+
+.telemetry-session {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #1f2937;
+  word-break: break-all;
+}
+
+.telemetry-empty {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.telemetry-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.telemetry-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  text-align: center;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-link:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .telemetry-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  .telemetry-head {
+    display: none;
+  }
+}

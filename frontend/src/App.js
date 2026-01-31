@@ -16,8 +16,23 @@ import TeachingPublic from './components/TeachingPublic';
 import Initiatives from './components/Initiatives';
 import Dashboard from './components/Dashboard';
 import AccountCenter from './components/AccountCenter';
+import AdminTelemetry from './components/AdminTelemetry';
 import ResearchHub from './components/ResearchHub';
 import './App.css';
+
+const AdminGate = ({ children }) => {
+  const { isAuthenticated, user } = useAuth();
+  const isAdmin = isAuthenticated && user && (
+    user.role === 'org_admin' ||
+    user.role === 'platform_admin'
+  );
+
+  if (!isAdmin) {
+    return <div className="container"><h2>Admin access required.</h2></div>;
+  }
+
+  return children;
+};
 
 const TeachingGate = ({ onLoginClick, children }) => {
   const { isAuthenticated, user } = useAuth();
@@ -93,6 +108,14 @@ function App() {
             />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/account" element={<AccountCenter />} />
+            <Route
+              path="/admin/telemetry"
+              element={
+                <AdminGate>
+                  <AdminTelemetry />
+                </AdminGate>
+              }
+            />
             <Route path="/research" element={<ResearchHub />} />
             <Route path="/initiatives" element={<Initiatives />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
