@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Lock, Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ConsentModal from './ConsentModal';
@@ -11,9 +11,8 @@ import './GameEmbed.css';
 const GameEmbed = () => {
   const { gameId } = useParams();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [hasConsent, setHasConsent] = useState(false);
-  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [showConsentDialog, setShowConsentDialog] = useState(false);
   const [isCheckingConsent, setIsCheckingConsent] = useState(true);
   const [telemetrySession, setTelemetrySession] = useState(null);
   const [telemetryStats, setTelemetryStats] = useState(null);
@@ -66,9 +65,8 @@ const GameEmbed = () => {
       const anonymousConsent = localStorage.getItem('anonymousConsent');
       if (anonymousConsent) {
         setHasConsent(true);
-        setShowConsentModal(false);
       } else {
-        setShowConsentModal(true);
+        setHasConsent(false);
       }
       setIsCheckingConsent(false);
       return;
@@ -84,14 +82,12 @@ const GameEmbed = () => {
 
       if (response.data.has_consent) {
         setHasConsent(true);
-        setShowConsentModal(false);
       } else {
-        setShowConsentModal(true);
+        setHasConsent(false);
       }
     } catch (error) {
       console.error('Error checking consent:', error);
-      // If error (401, 403, etc), show consent modal to be safe
-      setShowConsentModal(true);
+      setHasConsent(false);
     } finally {
       setIsCheckingConsent(false);
     }
@@ -99,8 +95,13 @@ const GameEmbed = () => {
 
   const handleConsentComplete = () => {
     setHasConsent(true);
-    setShowConsentModal(false);
+    setShowConsentDialog(false);
   };
+
+  const handleOpenConsent = () => {
+    setShowConsentDialog(true);
+  };
+
 
   const startTelemetrySession = async () => {
     try {
@@ -182,15 +183,6 @@ const GameEmbed = () => {
     }
   };
 
-  useEffect(() => {
-    // Add full-screen body class when game is loaded
-    if (hasConsent) {
-      document.body.classList.add('game-active');
-    }
-    return () => {
-      document.body.classList.remove('game-active');
-    };
-  }, [hasConsent]);
 
   const getGameUrl = () => {
     if (moduleInfo?.build_path) {
@@ -202,55 +194,7 @@ const GameEmbed = () => {
     return '#';
   };
 
-  // Show loading state while checking consent
-  if (isCheckingConsent) {
-    return (
-      <div className="game-embed-container">
-        <div className="game-header">
-          <Link to="/" className="back-button">
-            <ArrowLeft size={20} />
-            <span>Back to Simulations</span>
-          </Link>
-          <h2 className="game-title">Forces and Motion: Basics</h2>
-        </div>
-        <div className="consent-loading">
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show consent modal if needed
-  if (showConsentModal) {
-    return (
-      <>
-        <div className="game-embed-container">
-          <div className="game-header">
-            <Link to="/" className="back-button">
-              <ArrowLeft size={20} />
-              <span>Back to Simulations</span>
-            </Link>
-            <h2 className="game-title">Forces and Motion: Basics</h2>
-          </div>
-          <div className="consent-required-notice">
-            <Lock size={64} />
-            <h2>Consent Required</h2>
-            <p>
-              Before accessing the game, you must review and accept our terms, 
-              privacy policy, and data collection practices.
-            </p>
-          </div>
-        </div>
-        <ConsentModal 
-          isOpen={true} 
-          onClose={() => navigate('/')}
-          onConsentComplete={handleConsentComplete}
-        />
-      </>
-    );
-  }
-
-  // Show game if consent is given
+  // Render embedded player view
   return (
     <div className="game-embed-container">
       <div className="game-header">
@@ -259,8 +203,7 @@ const GameEmbed = () => {
           <span>Back to Simulations</span>
         </Link>
         <h2 className="game-title">Forces and Motion: Basics</h2>
-        
-        {/* Telemetry indicator */}
+
         {telemetryStats && (
           <div className="telemetry-indicator">
             <Activity size={16} />
@@ -268,17 +211,46 @@ const GameEmbed = () => {
           </div>
         )}
       </div>
-      
+
       <div className="game-iframe-wrapper">
-        <iframe
-          ref={iframeRef}
-          src={getGameUrl()}
-          title={gameId}
-          className="game-iframe"
-          frameBorder="0"
-          allowFullScreen
-        />
+        {hasConsent && !isCheckingConsent ? (
+          <iframe
+            ref={iframeRef}
+            src={getGameUrl()}
+            title={gameId}
+            className="game-iframe"
+            frameBorder="0"
+            allowFullScreen
+          />
+        ) : (
+          <div className="game-consent-overlay">
+            <div className="game-consent-card">
+              {isCheckingConsent ? (
+                <p>Loading...</p>
+              ) : (
+                <>
+                  <Lock size={48} />
+                  <h3>Consent Required</h3>
+                  <p>
+                    Before accessing the game, you must review and accept our terms,
+                    privacy policy, and data collection practices.
+                  </p>
+                  <div className="game-consent-actions">
+                    <button className="btn-primary" onClick={handleOpenConsent}>Review and Agree</button>
+                    <Link to="/" className="btn-secondary">Back</Link>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
+
+      <ConsentModal
+        isOpen={showConsentDialog}
+        onClose={() => setShowConsentDialog(false)}
+        onConsentComplete={handleConsentComplete}
+      />
 
       <div className="game-instructions">
         <h3>How to Play</h3>
@@ -302,19 +274,18 @@ const GameEmbed = () => {
             <strong>K:</strong> Objective Track
           </div>
         </div>
-        
-        {/* K-12 Compliance Notice */}
+
         <div className="telemetry-notice">
           <h4>📊 Data Collection Notice</h4>
           <p>
-            <strong>K-12 Student Privacy:</strong> We only collect keyboard button presses 
-            (like "W", "Space", "Arrow keys") to understand game interactions. 
+            <strong>K-12 Student Privacy:</strong> We only collect keyboard button presses
+            (like "W", "Space", "Arrow keys") to understand game interactions.
             We <strong>NEVER</strong> record what you type in text boxes or capture your screen.
           </p>
           {telemetryStats && (
             <p className="telemetry-stats">
-              Session: {telemetryStats.sessionId?.slice(0, 8)}... | 
-              Events: {telemetryStats.totalEvents} | 
+              Session: {telemetryStats.sessionId?.slice(0, 8)}... |
+              Events: {telemetryStats.totalEvents} |
               Status: {telemetryStats.isEnabled ? '✅ Active' : '⏸️ Paused'}
             </p>
           )}
@@ -322,6 +293,7 @@ const GameEmbed = () => {
       </div>
     </div>
   );
+
 };
 
 export default GameEmbed;
