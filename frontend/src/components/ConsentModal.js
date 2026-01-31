@@ -100,7 +100,6 @@ const ConsentModal = ({ isOpen, onClose, onConsent, onConsentComplete, required 
           </ul>
           <p><strong>We DO NOT collect:</strong></p>
           <ul>
-            <li>Text content you type in games</li>
             <li>Personal conversations</li>
             <li>Location data beyond IP address</li>
           </ul>
@@ -117,7 +116,8 @@ const ConsentModal = ({ isOpen, onClose, onConsent, onConsentComplete, required 
         <div className="consent-details-text">
           <p><strong>What we collect during gameplay:</strong></p>
           <ul>
-            <li><strong>Key presses</strong>: Only key codes (e.g., "W", "Space", "ArrowUp") - NOT the text you type</li>
+            <li><strong>Key presses</strong>: Key codes (e.g., "W", "Space", "ArrowUp")</li>
+            <li><strong>Text input</strong>: The text you enter during gameplay</li>
             <li><strong>Mouse clicks</strong>: Click positions and timing</li>
             <li><strong>Game events</strong>: Objectives completed, items collected, etc.</li>
             <li><strong>Session data</strong>: Time spent, levels completed</li>

@@ -278,9 +278,8 @@ const GameEmbed = () => {
         <div className="telemetry-notice">
           <h4>📊 Data Collection Notice</h4>
           <p>
-            <strong>K-12 Student Privacy:</strong> We only collect keyboard button presses
-            (like "W", "Space", "Arrow keys") to understand game interactions.
-            We <strong>NEVER</strong> record what you type in text boxes or capture your screen.
+            <strong>K-12 Student Privacy:</strong> We collect keyboard inputs and the text you enter
+            during gameplay to understand learning interactions. We do not record your screen.
           </p>
           {telemetryStats && (
             <p className="telemetry-stats">
