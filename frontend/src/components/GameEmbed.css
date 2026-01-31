@@ -1,19 +1,16 @@
 .game-embed-container {
   min-height: 100vh;
   background: var(--bg-light);
-  padding: 2rem 0 3rem;
+  padding: 1.5rem 0 3rem;
 }
 
 .game-header {
   max-width: 1200px;
-  margin: 0 auto 1.5rem;
-  background: white;
-  padding: 1.5rem 2rem;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin: 0 auto 1.25rem;
   display: flex;
   align-items: center;
   gap: 2rem;
-  border-radius: 14px;
+  padding: 0 2rem;
 }
 
 .telemetry-indicator {
@@ -70,11 +67,7 @@
   max-width: 1200px;
   margin: 0 auto;
   width: calc(100% - 4rem);
-  background: #0b0f14;
-  border-radius: 16px;
-  overflow: hidden;
   position: relative;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   aspect-ratio: 16 / 9;
 }
 
