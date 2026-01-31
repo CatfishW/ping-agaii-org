@@ -134,7 +134,6 @@ class TelemetryService {
     
     this.eventListeners.set('focusin', inputFocusHandler);
     this.eventListeners.set('focusout', inputBlurHandler);
-  }
 
     // Flush telemetry on exit
     this.beforeUnloadHandler = () => this.flushOnExit();
@@ -148,6 +147,8 @@ class TelemetryService {
     window.addEventListener('beforeunload', this.beforeUnloadHandler);
     window.addEventListener('pagehide', this.pageHideHandler);
     document.addEventListener('visibilitychange', this.visibilityHandler);
+  }
+
 
   /**
    * Handle keyboard key down
