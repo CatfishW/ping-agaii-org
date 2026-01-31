@@ -8,6 +8,7 @@
 class UnityBridge {
   constructor() {
     this.unityIframe = null;
+    this.unityWindow = null;
     this.messageHandlers = new Map();
     this.isReady = false;
     this.messageQueue = [];
@@ -24,7 +25,13 @@ class UnityBridge {
    */
   setIframe(iframe) {
     this.unityIframe = iframe;
+    this.unityWindow = iframe ? iframe.contentWindow : null;
     console.log('[UnityBridge] Iframe set');
+  }
+
+  setUnityWindow(targetWindow) {
+    this.unityWindow = targetWindow;
+    console.log('[UnityBridge] Unity window set');
   }
 
   /**
@@ -115,16 +122,16 @@ class UnityBridge {
       this.responseCallbacks.set(messageId, callback);
     }
 
-    if (!this.isReady || !this.unityIframe) {
-      // Queue message if Unity not ready
+    const target = this.unityWindow || (this.unityIframe ? this.unityIframe.contentWindow : window);
+
+    if (!this.isReady || !target) {
       this.messageQueue.push(message);
       console.log('[UnityBridge] Message queued (Unity not ready):', type);
       return;
     }
 
-    // Send message
     try {
-      this.unityIframe.contentWindow.postMessage(message, '*');
+      target.postMessage(message, '*');
       console.log('[UnityBridge] Sent to Unity:', type, payload);
     } catch (error) {
       console.error('[UnityBridge] Failed to send message:', error);
@@ -139,7 +146,9 @@ class UnityBridge {
     
     while (this.messageQueue.length > 0) {
       const message = this.messageQueue.shift();
-      this.unityIframe.contentWindow.postMessage(message, '*');
+      const target = this.unityWindow || (this.unityIframe ? this.unityIframe.contentWindow : window);
+      if (!target) return;
+      target.postMessage(message, '*');
     }
   }
 
@@ -200,6 +209,7 @@ class UnityBridge {
     this.responseCallbacks.clear();
     this.messageQueue = [];
     this.unityIframe = null;
+    this.unityWindow = null;
     this.isReady = false;
   }
 }
