@@ -22,6 +22,10 @@ class TelemetryService {
     this.uploadInterval = 5000; // Upload every 5 seconds
     this.uploadTimer = null;
     this.eventListeners = new Map();
+    this.beforeUnloadHandler = null;
+    this.pageHideHandler = null;
+    this.visibilityHandler = null;
+    this.sessionEnded = false;
     
     // K-12 Compliance: Track if we're in a text input to disable collection
     this.isInTextInput = false;
@@ -55,6 +59,8 @@ class TelemetryService {
     
     this.uploadInterval = this.batchMs;
     this.totalEventsCollected = 0;
+    this.sessionStartTime = Date.now();
+    this.sessionEnded = false;
     
     if (this.isEnabled) {
       this.startListening();
@@ -129,6 +135,19 @@ class TelemetryService {
     this.eventListeners.set('focusin', inputFocusHandler);
     this.eventListeners.set('focusout', inputBlurHandler);
   }
+
+    // Flush telemetry on exit
+    this.beforeUnloadHandler = () => this.flushOnExit();
+    this.pageHideHandler = () => this.flushOnExit();
+    this.visibilityHandler = () => {
+      if (document.visibilityState === 'hidden') {
+        this.flushOnExit();
+      }
+    };
+
+    window.addEventListener('beforeunload', this.beforeUnloadHandler);
+    window.addEventListener('pagehide', this.pageHideHandler);
+    document.addEventListener('visibilitychange', this.visibilityHandler);
 
   /**
    * Handle keyboard key down
@@ -297,10 +316,13 @@ class TelemetryService {
   async endSession() {
     if (!this.isEnabled) return;
 
-    this.logEvent('session_end', {
-      total_events: this.totalEventsCollected,
-      duration_ms: Date.now() - this.sessionStartTime
-    });
+    if (!this.sessionEnded) {
+      this.logEvent('session_end', {
+        total_events: this.totalEventsCollected,
+        duration_ms: Date.now() - this.sessionStartTime
+      });
+      this.sessionEnded = true;
+    }
 
     // Stop listening
     this.stopListening();
@@ -329,6 +351,19 @@ class TelemetryService {
       }
     });
     this.eventListeners.clear();
+
+    if (this.beforeUnloadHandler) {
+      window.removeEventListener('beforeunload', this.beforeUnloadHandler);
+      this.beforeUnloadHandler = null;
+    }
+    if (this.pageHideHandler) {
+      window.removeEventListener('pagehide', this.pageHideHandler);
+      this.pageHideHandler = null;
+    }
+    if (this.visibilityHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+      this.visibilityHandler = null;
+    }
   }
 
   /**
