@@ -4,6 +4,11 @@ import { User, ShieldCheck, Trash2, Mail, Gamepad2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './AccountCenter.css';
 
+const slugify = (value) => value
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/(^-|-$)+/g, '');
+
 const AccountCenter = () => {
   const { user, logout, updateUser } = useAuth();
   const isAdmin = user?.role === 'org_admin' || user?.role === 'platform_admin';
@@ -27,10 +32,7 @@ const AccountCenter = () => {
   const [subjects, setSubjects] = useState([]);
   const [subjectsLoading, setSubjectsLoading] = useState(false);
   const [newSubject, setNewSubject] = useState({
-    key: '',
-    name: '',
-    sort_order: 0,
-    is_active: true
+    name: ''
   });
   const [newModule, setNewModule] = useState({
     module_id: '',
@@ -50,6 +52,8 @@ const AccountCenter = () => {
       });
     }
   }, [user]);
+
+  const visibleSubjects = subjects.filter((subject) => subject.is_active);
 
   useEffect(() => {
     if (isAdmin) {
@@ -101,48 +105,19 @@ const AccountCenter = () => {
     }
   };
 
-  const handleSubjectChange = (id, field, value) => {
-    setSubjects((prev) => prev.map((subject) => (
-      subject.id === id ? { ...subject, [field]: value } : subject
-    )));
-  };
-
-  const saveSubject = async (subject) => {
+  const removeSubject = async (subject) => {
     setSaving(true);
     setMessage({ type: '', text: '' });
     try {
       await axios.put(`/api/admin/subjects/${subject.id}`, {
-        name: subject.name,
-        sort_order: subject.sort_order,
-        is_active: subject.is_active
+        is_active: false
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
       });
-      setMessage({ type: 'success', text: `Subject ${subject.key} saved.` });
+      setSubjects((prev) => prev.map((item) => (item.id === subject.id ? { ...item, is_active: false } : item)));
+      setMessage({ type: 'success', text: 'Subject removed.' });
     } catch (error) {
-      setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to save subject.' });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const createSubject = async () => {
-    setSaving(true);
-    setMessage({ type: '', text: '' });
-    try {
-      const response = await axios.post('/api/admin/subjects', {
-        key: newSubject.key,
-        name: newSubject.name,
-        sort_order: Number(newSubject.sort_order) || 0,
-        is_active: newSubject.is_active
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
-      });
-      setSubjects((prev) => [response.data, ...prev]);
-      setNewSubject({ key: '', name: '', sort_order: 0, is_active: true });
-      setMessage({ type: 'success', text: 'Subject created.' });
-    } catch (error) {
-      setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to create subject.' });
+      setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to remove subject.' });
     } finally {
       setSaving(false);
     }
@@ -445,41 +420,33 @@ const AccountCenter = () => {
             <section className="account-card">
               <h2><Gamepad2 size={18} /> Game Modules</h2>
               <div className="admin-grid">
-                <div className="admin-card">
-                  <h3>Subjects</h3>
-                  <label>
-                    Key
-                    <input
-                      value={newSubject.key}
-                      onChange={(event) => setNewSubject({ ...newSubject, key: event.target.value })}
-                      placeholder="physics"
-                    />
-                  </label>
-                  <label>
-                    Name
+                                <div className="admin-card subject-manager">
+                  <h3>Category Manager</h3>
+                  <p className="subject-helper">Add or remove subject tags that modules can use.</p>
+                  <div className="subject-input-row">
                     <input
                       value={newSubject.name}
-                      onChange={(event) => setNewSubject({ ...newSubject, name: event.target.value })}
-                      placeholder="Physics"
+                      onChange={(event) => setNewSubject({ name: event.target.value })}
+                      placeholder="Add a subject"
                     />
-                  </label>
-                  <label>
-                    Sort Order
-                    <input
-                      type="number"
-                      value={newSubject.sort_order}
-                      onChange={(event) => setNewSubject({ ...newSubject, sort_order: event.target.value })}
-                    />
-                  </label>
-                  <label className="toggle">
-                    <input
-                      type="checkbox"
-                      checked={newSubject.is_active}
-                      onChange={(event) => setNewSubject({ ...newSubject, is_active: event.target.checked })}
-                    />
-                    <span>Active</span>
-                  </label>
-                  <button className="btn-primary" disabled={saving} onClick={createSubject}>Create Subject</button>
+                    <button className="btn-secondary" disabled={saving} onClick={createSubject}>Add</button>
+                  </div>
+                  {subjectsLoading ? (
+                    <p>Loading subjects...</p>
+                  ) : (
+                    <div className="subject-list">
+                      {visibleSubjects.map((subject) => (
+                        <div key={subject.id} className="subject-pill">
+                          <span>{subject.name}</span>
+                          <button className="btn-secondary" onClick={() => removeSubject(subject)} disabled={saving}>
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                      {!visibleSubjects.length && <p className="subject-empty">No subjects configured yet.</p>}
+                    </div>
+                  )}
+                  <p className="subject-footnote">Use these names in module subject fields. Frontend filters use this list.</p>
                 </div>
 
                 {subjectsLoading ? (
@@ -559,11 +526,11 @@ const AccountCenter = () => {
                     </select>
                   </label>
                   <label>
-                    Build Prefix
+                    Game Folder
                     <input
                       value={newModule.build_path}
                       onChange={(event) => setNewModule({ ...newModule, build_path: event.target.value })}
-                      placeholder="/games/Force&Motion/Build/20251122DrivingBuild"
+                      placeholder="/games/Force&Motion"
                     />
                   </label>
                   <button className="btn-primary" disabled={saving} onClick={createModule}>Create Module</button>
@@ -601,7 +568,7 @@ const AccountCenter = () => {
                         </select>
                       </label>
                       <label>
-                        Build Prefix
+                        Game Folder
                         <input
                           value={module.build_path || ''}
                           onChange={(event) => handleModuleChange(module.id, 'build_path', event.target.value)}

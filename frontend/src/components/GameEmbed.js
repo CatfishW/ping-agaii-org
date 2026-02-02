@@ -10,8 +10,8 @@ import './GameEmbed.css';
 
 const UNITY_BUILD_MAP = {
   'forces-motion-basics': {
-    basePath: '/games/Force&Motion/Build',
-    buildName: '20251122DrivingBuild'
+    basePath: '/games/Force&Motion',
+    buildName: ''
   }
 };
 
@@ -137,18 +137,23 @@ const GameEmbed = () => {
 
   useEffect(() => {
     if (!hasConsent || isCheckingConsent) return;
-    const buildConfig = getUnityBuildConfig();
-    if (!buildConfig) {
-      setUnityStatus({ loading: false, progress: 0, error: 'Unity build not configured.' });
-      return;
-    }
+    let cancelled = false;
     if (!unityCanvasRef.current) return;
     if (unityInstanceRef.current) return;
 
     setUnityStatus({ loading: true, progress: 0, error: '' });
 
-    loadUnityScript(buildConfig.loaderUrl)
-      .then(() => {
+    resolveUnityBuildConfig()
+      .then((buildConfig) => {
+        if (cancelled) return null;
+        if (!buildConfig) {
+          setUnityStatus({ loading: false, progress: 0, error: 'Unity build not configured.' });
+          return null;
+        }
+        return loadUnityScript(buildConfig.loaderUrl).then(() => buildConfig);
+      })
+      .then((buildConfig) => {
+        if (!buildConfig) return null;
         if (typeof window.createUnityInstance !== 'function') {
           throw new Error('Unity loader missing');
         }
@@ -182,12 +187,13 @@ const GameEmbed = () => {
       });
 
     return () => {
+      cancelled = true;
       if (unityInstanceRef.current && typeof unityInstanceRef.current.Quit === 'function') {
         unityInstanceRef.current.Quit().catch(() => {});
         unityInstanceRef.current = null;
       }
     };
-  }, [hasConsent, isCheckingConsent, gameId]);
+  }, [hasConsent, isCheckingConsent, gameId, moduleInfo?.build_path]);
 
 
   const startTelemetrySession = async () => {
@@ -267,34 +273,57 @@ const GameEmbed = () => {
   };
 
 
-  const getUnityBuildConfig = () => {
+  const resolveBuildNameFromIndex = async (rootPath) => {
+    try {
+      const response = await fetch(`${rootPath}/index.html`, { cache: 'no-store' });
+      if (!response.ok) return null;
+      const html = await response.text();
+      const match = html.match(/Build\/([^"']+)\.loader\.js/);
+      return match ? match[1] : null;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const resolveUnityBuildConfig = async () => {
     const rawPath = moduleInfo?.build_path;
-    let basePath = '';
+    let baseRoot = '';
     let buildName = '';
 
     if (rawPath) {
-      const base = rawPath.endsWith('.loader.js') ? rawPath.slice(0, -'.loader.js'.length) : rawPath;
-      const lastSlash = base.lastIndexOf('/');
-      if (lastSlash !== -1) {
-        basePath = base.slice(0, lastSlash);
-        buildName = base.slice(lastSlash + 1);
+      if (rawPath.endsWith('.loader.js')) {
+        const base = rawPath.slice(0, -'.loader.js'.length);
+        const lastSlash = base.lastIndexOf('/');
+        if (lastSlash !== -1) {
+          baseRoot = base.slice(0, lastSlash);
+          buildName = base.slice(lastSlash + 1);
+        }
+      } else if (rawPath.includes('/Build/')) {
+        const parts = rawPath.split('/Build/');
+        baseRoot = parts[0];
+        buildName = parts[1] || '';
+        buildName = buildName.split('.')[0];
+      } else {
+        baseRoot = rawPath;
       }
     } else if (UNITY_BUILD_MAP[gameId]) {
-      basePath = UNITY_BUILD_MAP[gameId].basePath;
-      buildName = UNITY_BUILD_MAP[gameId].buildName;
+      baseRoot = UNITY_BUILD_MAP[gameId].basePath;
+      buildName = UNITY_BUILD_MAP[gameId].buildName || '';
     }
 
-    if (!basePath || !buildName) {
-      return null;
+    if (!baseRoot) return null;
+    if (!buildName) {
+      buildName = await resolveBuildNameFromIndex(baseRoot);
     }
+    if (!buildName) return null;
 
-    const base = `${basePath}/${buildName}`;
+    const buildBase = `${baseRoot}/Build/${buildName}`;
     return {
-      loaderUrl: `${base}.loader.js`,
-      dataUrl: `${base}.data`,
-      frameworkUrl: `${base}.framework.js`,
-      codeUrl: `${base}.wasm`,
-      streamingAssetsUrl: `${basePath}/StreamingAssets`
+      loaderUrl: `${buildBase}.loader.js`,
+      dataUrl: `${buildBase}.data`,
+      frameworkUrl: `${buildBase}.framework.js`,
+      codeUrl: `${buildBase}.wasm`,
+      streamingAssetsUrl: `${baseRoot}/StreamingAssets`
     };
   };
 
