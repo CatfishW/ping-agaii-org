@@ -10,8 +10,8 @@ import './GameEmbed.css';
 
 const UNITY_BUILD_MAP = {
   'forces-motion-basics': {
-    basePath: '/games/Force&Motion',
-    buildName: ''
+    basePath: '/games/Force&Motion/Build',
+    buildName: '20251122DrivingBuild'
   }
 };
 
@@ -137,23 +137,18 @@ const GameEmbed = () => {
 
   useEffect(() => {
     if (!hasConsent || isCheckingConsent) return;
-    let cancelled = false;
+    const buildConfig = getUnityBuildConfig();
+    if (!buildConfig) {
+      setUnityStatus({ loading: false, progress: 0, error: 'Unity build not configured.' });
+      return;
+    }
     if (!unityCanvasRef.current) return;
     if (unityInstanceRef.current) return;
 
     setUnityStatus({ loading: true, progress: 0, error: '' });
 
-    resolveUnityBuildConfig()
-      .then((buildConfig) => {
-        if (cancelled) return null;
-        if (!buildConfig) {
-          setUnityStatus({ loading: false, progress: 0, error: 'Unity build not configured.' });
-          return null;
-        }
-        return loadUnityScript(buildConfig.loaderUrl).then(() => buildConfig);
-      })
-      .then((buildConfig) => {
-        if (!buildConfig) return null;
+    loadUnityScript(buildConfig.loaderUrl)
+      .then(() => {
         if (typeof window.createUnityInstance !== 'function') {
           throw new Error('Unity loader missing');
         }
@@ -272,57 +267,34 @@ const GameEmbed = () => {
   };
 
 
-  const resolveBuildNameFromIndex = async (rootPath) => {
-    try {
-      const response = await fetch(`${rootPath}/index.html`, { cache: 'no-store' });
-      if (!response.ok) return null;
-      const html = await response.text();
-      const match = html.match(/Build\/([^"']+)\.loader\.js/);
-      return match ? match[1] : null;
-    } catch (error) {
-      return null;
-    }
-  };
-
-  const resolveUnityBuildConfig = async () => {
+  const getUnityBuildConfig = () => {
     const rawPath = moduleInfo?.build_path;
-    let baseRoot = '';
+    let basePath = '';
     let buildName = '';
 
     if (rawPath) {
-      if (rawPath.endsWith('.loader.js')) {
-        const base = rawPath.slice(0, -'.loader.js'.length);
-        const lastSlash = base.lastIndexOf('/');
-        if (lastSlash !== -1) {
-          baseRoot = base.slice(0, lastSlash);
-          buildName = base.slice(lastSlash + 1);
-        }
-      } else if (rawPath.includes('/Build/')) {
-        const parts = rawPath.split('/Build/');
-        baseRoot = parts[0];
-        buildName = parts[1] || '';
-        buildName = buildName.split('.')[0];
-      } else {
-        baseRoot = rawPath;
+      const base = rawPath.endsWith('.loader.js') ? rawPath.slice(0, -'.loader.js'.length) : rawPath;
+      const lastSlash = base.lastIndexOf('/');
+      if (lastSlash !== -1) {
+        basePath = base.slice(0, lastSlash);
+        buildName = base.slice(lastSlash + 1);
       }
     } else if (UNITY_BUILD_MAP[gameId]) {
-      baseRoot = UNITY_BUILD_MAP[gameId].basePath;
-      buildName = UNITY_BUILD_MAP[gameId].buildName || '';
+      basePath = UNITY_BUILD_MAP[gameId].basePath;
+      buildName = UNITY_BUILD_MAP[gameId].buildName;
     }
 
-    if (!baseRoot) return null;
-    if (!buildName) {
-      buildName = await resolveBuildNameFromIndex(baseRoot);
+    if (!basePath || !buildName) {
+      return null;
     }
-    if (!buildName) return null;
 
-    const buildBase = `${baseRoot}/Build/${buildName}`;
+    const base = `${basePath}/${buildName}`;
     return {
-      loaderUrl: `${buildBase}.loader.js`,
-      dataUrl: `${buildBase}.data`,
-      frameworkUrl: `${buildBase}.framework.js`,
-      codeUrl: `${buildBase}.wasm`,
-      streamingAssetsUrl: `${baseRoot}/StreamingAssets`
+      loaderUrl: `${base}.loader.js`,
+      dataUrl: `${base}.data`,
+      frameworkUrl: `${base}.framework.js`,
+      codeUrl: `${base}.wasm`,
+      streamingAssetsUrl: `${basePath}/StreamingAssets`
     };
   };
 

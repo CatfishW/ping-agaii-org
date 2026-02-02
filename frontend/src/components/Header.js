@@ -7,26 +7,11 @@ import './Header.css';
 const Header = ({ currentPage, setCurrentPage, setSearchQuery, onLoginClick }) => {
   const [showSearch, setShowSearch] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [subjects, setSubjects] = useState([]);
   const { user, isAuthenticated, isGuest, logout } = useAuth();
   const isAdmin = isAuthenticated && user && (user.role === 'org_admin' || user.role === 'platform_admin');
   const userMenuRef = useRef(null);
 
   // 点击外部关闭用户菜单
-  useEffect(() => {
-    const fetchSubjects = async () => {
-      try {
-        const response = await fetch('/api/subjects');
-        if (!response.ok) return;
-        const data = await response.json();
-        setSubjects(data || []);
-      } catch (error) {
-        // ignore errors for nav list
-      }
-    };
-    fetchSubjects();
-  }, []);
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
@@ -68,9 +53,11 @@ const Header = ({ currentPage, setCurrentPage, setSearchQuery, onLoginClick }) =
             <div className="dropdown-content">
               <Link to="/?subject=all">All Sims</Link>
               <hr />
-              {subjects.map((subject) => (
-                <Link key={subject.key} to={`/?subject=${subject.key}`}>{subject.name}</Link>
-              ))}
+              <Link to="/?subject=physics">Physics</Link>
+              <Link to="/?subject=math">Math & Statistics</Link>
+              <Link to="/?subject=chemistry">Chemistry</Link>
+              <Link to="/?subject=earth-science">Earth & Space</Link>
+              <Link to="/?subject=biology">Biology</Link>
             </div>
           </li>
           <li>
