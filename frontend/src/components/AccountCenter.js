@@ -539,38 +539,31 @@ const AccountCenter = () => {
                   </label>
                   <label>
                     Subject
-                    {subjects.length ? (
-                      <select
-                        value={newModule.subject_id || ''}
-                        onChange={(event) => {
-                          const selectedId = Number(event.target.value) || null;
-                          const selected = subjects.find((subject) => subject.id === selectedId);
-                          setNewModule({
-                            ...newModule,
-                            subject_id: selectedId,
-                            subject: selected ? selected.key : ''
-                          });
-                        }}
-                      >
-                        <option value="">Select subject</option>
-                        {subjects.map((subject) => (
-                          <option key={subject.id} value={subject.id}>{subject.name}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        value={newModule.subject}
-                        onChange={(event) => setNewModule({ ...newModule, subject: event.target.value })}
-                        placeholder="physics"
-                      />
-                    )}
+                    <select
+                      value={newModule.subject_id || ''}
+                      onChange={(event) => {
+                        const selectedId = Number(event.target.value) || null;
+                        const selected = subjects.find((subject) => subject.id === selectedId);
+                        setNewModule({
+                          ...newModule,
+                          subject_id: selectedId,
+                          subject: selected ? selected.key : ''
+                        });
+                      }}
+                      disabled={!subjects.length}
+                    >
+                      <option value="">{subjects.length ? 'Select subject' : 'No subjects configured'}</option>
+                      {subjects.map((subject) => (
+                        <option key={subject.id} value={subject.id}>{subject.name}</option>
+                      ))}
+                    </select>
                   </label>
                   <label>
-                    Build Path
+                    Build Prefix
                     <input
                       value={newModule.build_path}
                       onChange={(event) => setNewModule({ ...newModule, build_path: event.target.value })}
-                      placeholder="/games/Force&Motion/index.html"
+                      placeholder="/games/Force&Motion/Build/20251122DrivingBuild"
                     />
                   </label>
                   <button className="btn-primary" disabled={saving} onClick={createModule}>Create Module</button>
@@ -591,30 +584,24 @@ const AccountCenter = () => {
                       </label>
                       <label>
                         Subject
-                        {subjects.length ? (
-                          <select
-                            value={module.subject_id || ''}
-                            onChange={(event) => {
-                              const selectedId = Number(event.target.value) || null;
-                              const selected = subjects.find((subject) => subject.id === selectedId);
-                              handleModuleChange(module.id, 'subject_id', selectedId);
-                              handleModuleChange(module.id, 'subject', selected ? selected.key : '');
-                            }}
-                          >
-                            <option value="">Select subject</option>
-                            {subjects.map((subject) => (
-                              <option key={subject.id} value={subject.id}>{subject.name}</option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            value={module.subject}
-                            onChange={(event) => handleModuleChange(module.id, 'subject', event.target.value)}
-                          />
-                        )}
+                        <select
+                          value={module.subject_id || ''}
+                          onChange={(event) => {
+                            const selectedId = Number(event.target.value) || null;
+                            const selected = subjects.find((subject) => subject.id === selectedId);
+                            handleModuleChange(module.id, 'subject_id', selectedId);
+                            handleModuleChange(module.id, 'subject', selected ? selected.key : '');
+                          }}
+                          disabled={!subjects.length}
+                        >
+                          <option value="">{subjects.length ? 'Select subject' : 'No subjects configured'}</option>
+                          {subjects.map((subject) => (
+                            <option key={subject.id} value={subject.id}>{subject.name}</option>
+                          ))}
+                        </select>
                       </label>
                       <label>
-                        Build Path
+                        Build Prefix
                         <input
                           value={module.build_path || ''}
                           onChange={(event) => handleModuleChange(module.id, 'build_path', event.target.value)}

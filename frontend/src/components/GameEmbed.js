@@ -152,6 +152,9 @@ const GameEmbed = () => {
         if (typeof window.createUnityInstance !== 'function') {
           throw new Error('Unity loader missing');
         }
+        if (!unityCanvasRef.current.id) {
+          unityCanvasRef.current.id = `unity-canvas-${gameId}`;
+        }
         return window.createUnityInstance(
           unityCanvasRef.current,
           {
@@ -265,17 +268,33 @@ const GameEmbed = () => {
 
 
   const getUnityBuildConfig = () => {
-    const config = UNITY_BUILD_MAP[gameId];
-    if (!config) {
+    const rawPath = moduleInfo?.build_path;
+    let basePath = '';
+    let buildName = '';
+
+    if (rawPath) {
+      const base = rawPath.endsWith('.loader.js') ? rawPath.slice(0, -'.loader.js'.length) : rawPath;
+      const lastSlash = base.lastIndexOf('/');
+      if (lastSlash !== -1) {
+        basePath = base.slice(0, lastSlash);
+        buildName = base.slice(lastSlash + 1);
+      }
+    } else if (UNITY_BUILD_MAP[gameId]) {
+      basePath = UNITY_BUILD_MAP[gameId].basePath;
+      buildName = UNITY_BUILD_MAP[gameId].buildName;
+    }
+
+    if (!basePath || !buildName) {
       return null;
     }
-    const base = `${config.basePath}/${config.buildName}`;
+
+    const base = `${basePath}/${buildName}`;
     return {
       loaderUrl: `${base}.loader.js`,
       dataUrl: `${base}.data`,
       frameworkUrl: `${base}.framework.js`,
       codeUrl: `${base}.wasm`,
-      streamingAssetsUrl: `${config.basePath}/StreamingAssets`
+      streamingAssetsUrl: `${basePath}/StreamingAssets`
     };
   };
 
@@ -300,7 +319,7 @@ const GameEmbed = () => {
       <div className="game-iframe-wrapper">
         {hasConsent && !isCheckingConsent ? (
           <div className="unity-container">
-            <canvas ref={unityCanvasRef} className="unity-canvas" />
+            <canvas ref={unityCanvasRef} id={`unity-canvas-${gameId}`} className="unity-canvas" />
             {unityStatus.loading && (
               <div className="unity-loading">
                 <div className="unity-progress">
