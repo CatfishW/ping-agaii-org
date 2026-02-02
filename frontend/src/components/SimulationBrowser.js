@@ -9,6 +9,7 @@ const SimulationBrowser = ({ searchQuery }) => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('browse');
   const [selectedSubject, setSelectedSubject] = useState('all');
+  const [subjects, setSubjects] = useState([]);
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
@@ -18,6 +19,15 @@ const SimulationBrowser = ({ searchQuery }) => {
       setActiveTab('filter');
     }
   }, [searchParams]);
+
+  const fetchSubjects = async () => {
+    try {
+      const response = await axios.get('/api/subjects');
+      setSubjects(response.data || []);
+    } catch (err) {
+      console.error('Error fetching subjects:', err);
+    }
+  };
 
   const fetchSimulations = async () => {
     try {
@@ -41,18 +51,19 @@ const SimulationBrowser = ({ searchQuery }) => {
   };
 
   useEffect(() => {
+    fetchSubjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     fetchSimulations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSubject, searchQuery]);
 
-  const subjects = {
-    'all': 'All Subjects',
-    'physics': 'Physics',
-    'math': 'Math & Statistics',
-    'chemistry': 'Chemistry',
-    'biology': 'Biology',
-    'earth-science': 'Earth & Space'
-  };
+  const subjectOptions = [
+    { key: 'all', name: 'All Subjects' },
+    ...subjects
+  ];
 
   const getBadgeClass = (badge) => {
     if (!badge) return '';
@@ -106,8 +117,8 @@ const SimulationBrowser = ({ searchQuery }) => {
                 value={selectedSubject}
                 onChange={(e) => setSelectedSubject(e.target.value)}
               >
-                {Object.entries(subjects).map(([key, value]) => (
-                  <option key={key} value={key}>{value}</option>
+                {subjectOptions.map((subject) => (
+                  <option key={subject.key} value={subject.key}>{subject.name}</option>
                 ))}
               </select>
             </div>

@@ -559,11 +559,11 @@ const AccountCenter = () => {
                     </select>
                   </label>
                   <label>
-                    Build Prefix
+                    Game Folder
                     <input
                       value={newModule.build_path}
                       onChange={(event) => setNewModule({ ...newModule, build_path: event.target.value })}
-                      placeholder="/games/Force&Motion/Build/20251122DrivingBuild"
+                      placeholder="/games/Force&Motion"
                     />
                   </label>
                   <button className="btn-primary" disabled={saving} onClick={createModule}>Create Module</button>
@@ -601,7 +601,7 @@ const AccountCenter = () => {
                         </select>
                       </label>
                       <label>
-                        Build Prefix
+                        Game Folder
                         <input
                           value={module.build_path || ''}
                           onChange={(event) => handleModuleChange(module.id, 'build_path', event.target.value)}
