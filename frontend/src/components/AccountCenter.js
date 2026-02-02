@@ -123,6 +123,32 @@ const AccountCenter = () => {
     }
   };
 
+  const createSubject = async () => {
+    const trimmed = newSubject.name.trim();
+    if (!trimmed) return;
+
+    setSaving(true);
+    setMessage({ type: '', text: '' });
+    try {
+      const payload = {
+        key: slugify(trimmed),
+        name: trimmed,
+        sort_order: subjects.length * 10,
+        is_active: true
+      };
+      const response = await axios.post('/api/admin/subjects', payload, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+      });
+      setSubjects((prev) => [response.data, ...prev]);
+      setNewSubject({ name: '' });
+      setMessage({ type: 'success', text: 'Subject created.' });
+    } catch (error) {
+      setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to create subject.' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleTemplateChange = (id, field, value) => {
     setTemplates((prev) => prev.map((tmpl) => (
       tmpl.id === id ? { ...tmpl, [field]: value } : tmpl
@@ -416,11 +442,11 @@ const AccountCenter = () => {
             </section>
           )}
 
-          {isAdmin && activeSection === 'modules' && (
+                    {isAdmin && activeSection === 'modules' && (
             <section className="account-card">
               <h2><Gamepad2 size={18} /> Game Modules</h2>
               <div className="admin-grid">
-                                <div className="admin-card subject-manager">
+                <div className="admin-card subject-manager">
                   <h3>Category Manager</h3>
                   <p className="subject-helper">Add or remove subject tags that modules can use.</p>
                   <div className="subject-input-row">
@@ -448,44 +474,6 @@ const AccountCenter = () => {
                   )}
                   <p className="subject-footnote">Use these names in module subject fields. Frontend filters use this list.</p>
                 </div>
-
-                {subjectsLoading ? (
-                  <p>Loading subjects...</p>
-                ) : (
-                  subjects.map((subject) => (
-                    <div key={subject.id} className="admin-card">
-                      <div className="admin-card-header">
-                        <strong>{subject.key}</strong>
-                        <label className="toggle">
-                          <input
-                            type="checkbox"
-                            checked={subject.is_active}
-                            onChange={(event) => handleSubjectChange(subject.id, 'is_active', event.target.checked)}
-                          />
-                          <span>Active</span>
-                        </label>
-                      </div>
-                      <label>
-                        Name
-                        <input
-                          value={subject.name}
-                          onChange={(event) => handleSubjectChange(subject.id, 'name', event.target.value)}
-                        />
-                      </label>
-                      <label>
-                        Sort Order
-                        <input
-                          type="number"
-                          value={subject.sort_order}
-                          onChange={(event) => handleSubjectChange(subject.id, 'sort_order', event.target.value)}
-                        />
-                      </label>
-                      <button className="btn-primary" disabled={saving} onClick={() => saveSubject(subject)}>
-                        Save Subject
-                      </button>
-                    </div>
-                  ))
-                )}
               </div>
               <div className="admin-grid">
                 <div className="admin-card">
