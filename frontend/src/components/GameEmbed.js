@@ -184,7 +184,7 @@ const GameEmbed = () => {
         unityInstanceRef.current = null;
       }
     };
-  }, [hasConsent, isCheckingConsent, gameId, moduleInfo]);
+  }, [hasConsent, isCheckingConsent, gameId]);
 
 
   const startTelemetrySession = async () => {
