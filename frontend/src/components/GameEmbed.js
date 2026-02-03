@@ -162,7 +162,6 @@ const GameEmbed = () => {
 
   useEffect(() => {
     if (!hasConsent || isCheckingConsent) return;
-    let cancelled = false;
     if (!unityCanvasRef.current) return;
     if (unityInstanceRef.current) return;
 
@@ -174,7 +173,7 @@ const GameEmbed = () => {
 
     setUnityStatus({ loading: true, progress: 0, error: '' });
 
-    Promise.resolve(buildConfig)
+    loadUnityScript(buildConfig.loaderUrl).then(() => buildConfig)
       .then((buildConfig) => {
         if (typeof window.createUnityInstance !== 'function') {
           throw new Error('Unity loader missing');
@@ -209,7 +208,6 @@ const GameEmbed = () => {
       });
 
     return () => {
-      cancelled = true;
       if (unityInstanceRef.current && typeof unityInstanceRef.current.Quit === 'function') {
         unityInstanceRef.current.Quit().catch(() => {});
         unityInstanceRef.current = null;
@@ -295,61 +293,7 @@ const GameEmbed = () => {
   };
 
 
-  const resolveBuildNameFromIndex = async (rootPath) => {
-    try {
-      const response = await fetch(`${rootPath}/index.html`, { cache: 'no-store' });
-      if (!response.ok) return null;
-      const html = await response.text();
-      const match = html.match(/Build\/([^"']+)\.loader\.js/);
-      return match ? match[1] : null;
-    } catch (error) {
-      return null;
-    }
-  };
-
-  const resolveUnityBuildConfig = async () => {
-    const rawPath = moduleInfo?.build_path;
-    let baseRoot = '';
-    let buildName = '';
-
-    if (rawPath) {
-      if (rawPath.endsWith('.loader.js')) {
-        const base = rawPath.slice(0, -'.loader.js'.length);
-        const lastSlash = base.lastIndexOf('/');
-        if (lastSlash !== -1) {
-          baseRoot = base.slice(0, lastSlash);
-          buildName = base.slice(lastSlash + 1);
-        }
-      } else if (rawPath.includes('/Build/')) {
-        const parts = rawPath.split('/Build/');
-        baseRoot = parts[0];
-        buildName = parts[1] || '';
-        buildName = buildName.split('.')[0];
-      } else {
-        baseRoot = rawPath;
-      }
-    } else if (UNITY_BUILD_MAP[gameId]) {
-      baseRoot = UNITY_BUILD_MAP[gameId].basePath;
-      buildName = UNITY_BUILD_MAP[gameId].buildName || '';
-    }
-
-    if (!baseRoot) return null;
-    if (!buildName) {
-      buildName = await resolveBuildNameFromIndex(baseRoot);
-    }
-    if (!buildName) return null;
-
-    const buildBase = `${baseRoot}/Build/${buildName}`;
-    return {
-      loaderUrl: `${buildBase}.loader.js`,
-      dataUrl: `${buildBase}.data`,
-      frameworkUrl: `${buildBase}.framework.js`,
-      codeUrl: `${buildBase}.wasm`,
-      streamingAssetsUrl: `${baseRoot}/StreamingAssets`
-    };
-  };
-
-  // Render embedded player view
+    // Render embedded player view
   return (
     <div className="game-embed-container">
       <div className="game-header">
