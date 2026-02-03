@@ -135,6 +135,21 @@ const GameEmbed = () => {
     setShowConsentDialog(true);
   };
 
+  const getUnityBuildConfig = () => {
+    const rawPath = moduleInfo?.build_path || '';
+    const mapConfig = UNITY_BUILD_MAP[gameId];
+    const base = rawPath || (mapConfig ? `${mapConfig.basePath}/${mapConfig.buildName}` : '');
+    if (!base) return null;
+    const prefix = base.endsWith('.loader.js') ? base.slice(0, -'.loader.js'.length) : base;
+    return {
+      loaderUrl: `${prefix}.loader.js`,
+      dataUrl: `${prefix}.data`,
+      frameworkUrl: `${prefix}.framework.js`,
+      codeUrl: `${prefix}.wasm`,
+      streamingAssetsUrl: `${prefix.split('/Build/')[0]}/StreamingAssets`
+    };
+  };
+
   const handleFullscreen = () => {
     if (unityInstanceRef.current && typeof unityInstanceRef.current.SetFullscreen === 'function') {
       unityInstanceRef.current.SetFullscreen(1);
@@ -151,19 +166,16 @@ const GameEmbed = () => {
     if (!unityCanvasRef.current) return;
     if (unityInstanceRef.current) return;
 
+    const buildConfig = getUnityBuildConfig();
+    if (!buildConfig) {
+      setUnityStatus({ loading: false, progress: 0, error: 'Unity build not configured.' });
+      return;
+    }
+
     setUnityStatus({ loading: true, progress: 0, error: '' });
 
-    resolveUnityBuildConfig()
+    Promise.resolve(buildConfig)
       .then((buildConfig) => {
-        if (cancelled) return null;
-        if (!buildConfig) {
-          setUnityStatus({ loading: false, progress: 0, error: 'Unity build not configured.' });
-          return null;
-        }
-        return loadUnityScript(buildConfig.loaderUrl).then(() => buildConfig);
-      })
-      .then((buildConfig) => {
-        if (!buildConfig) return null;
         if (typeof window.createUnityInstance !== 'function') {
           throw new Error('Unity loader missing');
         }
