@@ -311,9 +311,51 @@ class TelemetryService {
     }
   }
 
-  /**
-   * End telemetry session and upload remaining events
-   */
+  createSessionEndEvent() {
+    return {
+      session_id: this.sessionId,
+      user_id: this.userId,
+      guest_id: this.guestId,
+      module_id: this.moduleId,
+      event_type: 'session_end',
+      payload: {
+        total_events: this.totalEventsCollected,
+        duration_ms: Date.now() - this.sessionStartTime
+      },
+      timestamp: new Date().toISOString(),
+      client_timestamp: Date.now()
+    };
+  }
+
+  flushOnExit() {
+    if (!this.isEnabled) return;
+    if (!this.sessionId) return;
+
+    if (!this.sessionEnded) {
+      this.eventBuffer.push(this.createSessionEndEvent());
+      this.totalEventsCollected++;
+      this.sessionEnded = true;
+    }
+
+    if (this.eventBuffer.length === 0) return;
+
+    const eventsToUpload = [...this.eventBuffer];
+    const payload = JSON.stringify({
+      session_id: this.sessionId,
+      events: eventsToUpload
+    });
+
+    try {
+      const blob = new Blob([payload], { type: 'application/json' });
+      const ok = navigator.sendBeacon('/api/telemetry/events', blob);
+      if (ok) {
+        this.eventBuffer = [];
+      }
+    } catch (error) {
+      // keep buffer if beacon fails
+    }
+  }
+
   async endSession() {
     if (!this.isEnabled) return;
 
