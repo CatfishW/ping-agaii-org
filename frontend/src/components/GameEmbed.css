@@ -286,3 +286,13 @@
   border-radius: 8px;
   font-size: 0.9rem;
 }
+
+.fullscreen-btn {
+  margin-left: auto;
+}
+
+@media (max-width: 900px) {
+  .fullscreen-btn {
+    width: 100%;
+  }
+}

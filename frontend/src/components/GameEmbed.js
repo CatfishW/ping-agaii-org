@@ -135,6 +135,16 @@ const GameEmbed = () => {
     setShowConsentDialog(true);
   };
 
+  const handleFullscreen = () => {
+    if (unityInstanceRef.current && typeof unityInstanceRef.current.SetFullscreen === 'function') {
+      unityInstanceRef.current.SetFullscreen(1);
+      return;
+    }
+    if (unityCanvasRef.current && unityCanvasRef.current.requestFullscreen) {
+      unityCanvasRef.current.requestFullscreen();
+    }
+  };
+
   useEffect(() => {
     if (!hasConsent || isCheckingConsent) return;
     let cancelled = false;
@@ -336,6 +346,9 @@ const GameEmbed = () => {
           <span>Back to Simulations</span>
         </Link>
         <h2 className="game-title">Forces and Motion: Basics</h2>
+        <button className="btn-secondary fullscreen-btn" onClick={handleFullscreen}>
+          Fullscreen
+        </button>
 
         {telemetryStats && (
           <div className="telemetry-indicator">
