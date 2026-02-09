@@ -99,12 +99,26 @@ ping-agaii-org/
 ### ✅ Implemented
 
 - 🎮 Interactive simulation browser
-- 🔍 Real-time search and filtering  
+- 🔍 Real-time search and filtering
 - 🎯 Subject-based categorization
-- 🎲 Embedded Unity game (Forces and Motion)
+- 🎲 Embedded Unity WebGL game (Forces and Motion) in React canvas
 - 📱 Responsive design
 - 🚀 Fast and modern UI
 - 🔐 User authentication (Register/Login)
+- 🧭 Admin Account Center (email templates, game modules, subjects)
+- 📊 Telemetry capture + admin export/downloads
+- 🔁 SPARC uses PING backend via `/api/sparc`
+- ✉️ Password reset emails
+
+### Recent Platform Updates (2026-02)
+
+- Unified PING backend for both PING and SPARC (SPARC calls `/api/sparc`)
+- Game modules are DB-driven; only Forces & Motion is published by default
+- Unity WebGL is embedded directly in React (no iframe) with fullscreen button
+- Admin Telemetry Data page for downloading session files
+- Telemetry storage: DB summary + zstd JSONL files at `/mnt/data/pingdata/telemetry/<module_id>/<session_id>.jsonl.zst`
+- Subjects are managed in the admin UI and used for filters/navigation
+
 ### Public Endpoints
 
 | Method | Endpoint | Description |
@@ -114,6 +128,20 @@ ping-agaii-org/
 | GET | `/api/simulations/{sim_id}` | Get specific simulation |
 | GET | `/api/subjects` | Get all subjects |
 | GET | `/api/tags` | Get all tags |
+
+### Admin Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/admin/modules` | List modules |
+| POST | `/api/admin/modules` | Create module |
+| PUT | `/api/admin/modules/{module_id}` | Update module |
+| GET | `/api/admin/subjects` | List subjects |
+| POST | `/api/admin/subjects` | Create subject |
+| PUT | `/api/admin/subjects/{subject_id}` | Update subject |
+| GET | `/api/admin/telemetry/sessions` | List telemetry sessions |
+| GET | `/api/admin/telemetry/sessions/{session_id}/download` | Download session file |
+| GET | `/api/admin/telemetry/exports` | Download module telemetry ZIP |
 
 ### Authentication Endpoints
 
