@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, User, ChevronDown, Sparkles, LogOut, Settings, Database } from 'lucide-react';
+import { Search, User, ChevronDown, Sparkles, LogOut, Settings, Database, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './Header.css';
 
@@ -125,6 +125,10 @@ const Header = ({ currentPage, setCurrentPage, setSearchQuery, onLoginClick }) =
                         <Link to="/admin/telemetry" onClick={() => setShowUserMenu(false)}>
                           <Database size={16} />
                           Telemetry Data
+                        </Link>
+                        <Link to="/admin/users" onClick={() => setShowUserMenu(false)}>
+                          <Users size={16} />
+                          User Management
                         </Link>
                       )}
                       <button onClick={() => { logout(); setShowUserMenu(false); }}>

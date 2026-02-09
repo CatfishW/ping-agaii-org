@@ -258,3 +258,31 @@
   font-size: 0.85rem;
   margin-top: 0.5rem;
 }
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.muted {
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.success-message {
+  margin-top: 0.75rem;
+  background: #e8f7ef;
+  color: #0b6b3a;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+}
+
+.error-message {
+  margin-top: 0.75rem;
+  background: #fde8e8;
+  color: #b42318;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+}

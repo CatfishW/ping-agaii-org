@@ -205,15 +205,14 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login', redirectUrl = '' })
             <div className="form-group">
               <label>
                 <Lock size={18} />
-                Invite Code
+                Invite Code (optional)
               </label>
               <input
                 type="text"
                 name="invite_code"
                 value={formData.invite_code}
                 onChange={handleChange}
-                placeholder="Enter your invite code"
-                required
+                placeholder="Optional invite code"
               />
             </div>
           )}

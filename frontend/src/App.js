@@ -17,6 +17,7 @@ import Initiatives from './components/Initiatives';
 import Dashboard from './components/Dashboard';
 import AccountCenter from './components/AccountCenter';
 import AdminTelemetry from './components/AdminTelemetry';
+import AdminUsers from './components/AdminUsers';
 import ResearchHub from './components/ResearchHub';
 import './App.css';
 
@@ -108,6 +109,15 @@ function App() {
             />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/account" element={<AccountCenter />} />
+            <Route
+              path="/admin/users"
+              element={
+                <AdminGate>
+                  <AdminUsers />
+                </AdminGate>
+              }
+            />
+
             <Route
               path="/admin/telemetry"
               element={

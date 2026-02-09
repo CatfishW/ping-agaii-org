@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { User, ShieldCheck, Trash2, Mail, Gamepad2 } from 'lucide-react';
+import { User, ShieldCheck, Trash2, Mail, Gamepad2, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './AccountCenter.css';
 
@@ -41,6 +41,8 @@ const AccountCenter = () => {
     subject_id: null,
     build_path: ''
   });
+  const [joinCode, setJoinCode] = useState('');
+  const [joinMessage, setJoinMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
     if (user) {
@@ -74,6 +76,23 @@ const AccountCenter = () => {
       console.error('Failed to load templates:', error);
     } finally {
       setTemplatesLoading(false);
+    }
+  };
+
+  const handleJoinClass = async () => {
+    if (!joinCode.trim()) {
+      setJoinMessage({ type: 'error', text: 'Enter a class join code.' });
+      return;
+    }
+    try {
+      const token = localStorage.getItem('access_token');
+      await axios.post('/api/classes/join', { join_code: joinCode.trim() }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setJoinMessage({ type: 'success', text: 'Joined class successfully.' });
+      setJoinCode('');
+    } catch (error) {
+      setJoinMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to join class.' });
     }
   };
 
