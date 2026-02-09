@@ -122,7 +122,11 @@ function App() {
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/cookie-policy" element={<CookiePolicy />} />
           </Routes>
-          
+
+          <footer className="site-footer">
+            © 2026 AGAII Organization. All rights reserved.
+          </footer>
+
           <AuthModal 
             isOpen={showAuthModal} 
             onClose={() => setShowAuthModal(false)} 
