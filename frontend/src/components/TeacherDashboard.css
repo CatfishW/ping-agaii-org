@@ -192,6 +192,28 @@
   text-decoration: none;
 }
 
+.class-teacher {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.btn-danger-inline {
+  border-color: #f0c8c8;
+  color: #b42318;
+}
+
+.btn-danger-inline:hover {
+  background: #ffebee;
+  border-color: #e6a6a6;
+}
+
+.btn-danger-inline:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Empty State */
 .empty-state {
   background: white;

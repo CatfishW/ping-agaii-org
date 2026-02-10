@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Users, BookOpen, Activity, TrendingUp, Copy } from 'lucide-react';
+import { Plus, Users, BookOpen, Activity, TrendingUp, Copy, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import './TeacherDashboard.css';
@@ -265,7 +265,7 @@ const TeacherDashboard = () => {
 
       {/* Classes List */}
       <div className="classes-section">
-        <h2>My Classes</h2>
+        <h2>{isAdmin ? 'Organization Classes' : 'My Classes'}</h2>
         
         {classes.length === 0 ? (
           <div className="empty-state">
@@ -279,8 +279,13 @@ const TeacherDashboard = () => {
           </div>
         ) : (
           <div className="classes-grid">
-            {classes.map(cls => (
-              <ClassCard key={cls.id} classData={cls} onUpdate={fetchClasses} />
+            {classes.map((cls) => (
+              <ClassCard
+                key={cls.id}
+                classData={cls}
+                isAdmin={isAdmin}
+                onUpdate={fetchClasses}
+              />
             ))}
           </div>
         )}
@@ -512,8 +517,26 @@ const TeacherDashboard = () => {
   );
 };
 
-const ClassCard = ({ classData, onUpdate }) => {
-  const [showDetails, setShowDetails] = useState(false);
+const ClassCard = ({ classData, isAdmin, onUpdate }) => {
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Delete class "${classData.name}"? This will deactivate the class.`)) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      await axios.delete(`/api/classes/${classData.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      onUpdate();
+    } catch (error) {
+      alert(error.response?.data?.detail || 'Failed to delete class');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="class-card">
@@ -526,6 +549,12 @@ const ClassCard = ({ classData, onUpdate }) => {
 
       {classData.description && (
         <p className="class-description">{classData.description}</p>
+      )}
+
+      {isAdmin && (classData.teacher_name || classData.teacher_email) && (
+        <div className="class-teacher">
+          Teacher: {classData.teacher_name || classData.teacher_email}
+        </div>
       )}
 
       <div className="class-stats">
@@ -548,6 +577,15 @@ const ClassCard = ({ classData, onUpdate }) => {
         <Link to={`/teaching/classes/${classData.id}`} className="btn-secondary">
           View Details
         </Link>
+        <button
+          className="btn-secondary btn-danger-inline"
+          type="button"
+          onClick={handleDelete}
+          disabled={deleting}
+          title="Delete Class"
+        >
+          <Trash2 size={16} /> {deleting ? 'Deleting...' : 'Delete'}
+        </button>
       </div>
     </div>
   );
