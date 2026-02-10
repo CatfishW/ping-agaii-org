@@ -368,34 +368,42 @@ const AdminCenter = ({ defaultSection = 'overview' }) => {
                     <div className="muted">Search, deactivate, or delete users.</div>
                   </div>
                 </button>
-                <button className="admin-center-card" type="button" onClick={() => setActiveSection('telemetry')}>
-                  <Database size={18} />
-                  <div>
-                    <strong>Telemetry Exports</strong>
-                    <div className="muted">Download session files or export ZIPs.</div>
-                  </div>
-                </button>
-                <button className="admin-center-card" type="button" onClick={() => setActiveSection('modules')}>
-                  <Gamepad2 size={18} />
-                  <div>
-                    <strong>Modules + Subjects</strong>
-                    <div className="muted">Publish modules and manage categories.</div>
-                  </div>
-                </button>
-                <button className="admin-center-card" type="button" onClick={() => setActiveSection('templates')}>
-                  <Mail size={18} />
-                  <div>
-                    <strong>Email Templates</strong>
-                    <div className="muted">Welcome and password reset templates.</div>
-                  </div>
-                </button>
-                <button className="admin-center-card" type="button" onClick={() => setActiveSection('orgs')}>
-                  <Building2 size={18} />
-                  <div>
-                    <strong>Organizations</strong>
-                    <div className="muted">Create and maintain organization records.</div>
-                  </div>
-                </button>
+                {isPlatformAdmin && (
+                  <button className="admin-center-card" type="button" onClick={() => setActiveSection('telemetry')}>
+                    <Database size={18} />
+                    <div>
+                      <strong>Telemetry Exports</strong>
+                      <div className="muted">Download session files or export ZIPs.</div>
+                    </div>
+                  </button>
+                )}
+                {isPlatformAdmin && (
+                  <button className="admin-center-card" type="button" onClick={() => setActiveSection('modules')}>
+                    <Gamepad2 size={18} />
+                    <div>
+                      <strong>Modules + Subjects</strong>
+                      <div className="muted">Publish modules and manage categories.</div>
+                    </div>
+                  </button>
+                )}
+                {isPlatformAdmin && (
+                  <button className="admin-center-card" type="button" onClick={() => setActiveSection('templates')}>
+                    <Mail size={18} />
+                    <div>
+                      <strong>Email Templates</strong>
+                      <div className="muted">Welcome and password reset templates.</div>
+                    </div>
+                  </button>
+                )}
+                {isPlatformAdmin && (
+                  <button className="admin-center-card" type="button" onClick={() => setActiveSection('orgs')}>
+                    <Building2 size={18} />
+                    <div>
+                      <strong>Organizations</strong>
+                      <div className="muted">Create and maintain organization records.</div>
+                    </div>
+                  </button>
+                )}
               </div>
             </section>
           )}

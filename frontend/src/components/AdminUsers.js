@@ -11,10 +11,17 @@ const roleOptions = [
   { value: 'platform_admin', label: 'Platform Admin' }
 ];
 
+const orgAdminRoleOptions = [
+  { value: 'student', label: 'Student' },
+  { value: 'teacher', label: 'Teacher' }
+];
+
 const AdminUsers = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'org_admin' || user?.role === 'platform_admin';
   const isPlatformAdmin = user?.role === 'platform_admin';
+  const canEditAdminRoles = isPlatformAdmin;
+  const canChangeOrg = isPlatformAdmin;
   const [users, setUsers] = useState([]);
   const [organizations, setOrganizations] = useState([]);
   const [query, setQuery] = useState('');
@@ -59,7 +66,9 @@ const AdminUsers = () => {
 
   useEffect(() => {
     if (isAdmin) {
-      fetchOrganizations();
+      if (isPlatformAdmin) {
+        fetchOrganizations();
+      }
       fetchUsers();
     }
   }, [isAdmin]);
@@ -73,12 +82,16 @@ const AdminUsers = () => {
   const saveUser = async (userRow) => {
     setMessage({ type: '', text: '' });
     try {
-      await axios.put(`/api/admin/users/${userRow.id}`, {
+      const payload = {
         role: userRow.role,
         is_active: userRow.is_active,
         is_verified: userRow.is_verified,
-        organization_id: userRow.organization_id
-      }, {
+      };
+      if (canChangeOrg) {
+        payload.organization_id = userRow.organization_id;
+      }
+
+      await axios.put(`/api/admin/users/${userRow.id}`, payload, {
         headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
       });
       setMessage({ type: 'success', text: `Saved user ${userRow.email || userRow.username}` });
@@ -178,8 +191,9 @@ const AdminUsers = () => {
             <select
               value={userRow.role}
               onChange={(event) => handleUserChange(userRow.id, 'role', event.target.value)}
+              disabled={!canEditAdminRoles && (userRow.role === 'org_admin' || userRow.role === 'platform_admin')}
             >
-              {roleOptions.map((role) => (
+              {(isPlatformAdmin ? roleOptions : orgAdminRoleOptions).map((role) => (
                 <option key={role.value} value={role.value}>{role.label}</option>
               ))}
             </select>

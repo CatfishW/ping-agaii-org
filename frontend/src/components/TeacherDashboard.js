@@ -178,6 +178,24 @@ const TeacherDashboard = () => {
     }
   };
 
+  const handleDeleteInvite = async (inviteId) => {
+    if (!window.confirm('Delete this invite code? This cannot be undone.')) {
+      return;
+    }
+    setInviteError('');
+    setInviteSuccess('');
+    try {
+      const token = localStorage.getItem('access_token');
+      await axios.delete(`/api/invites/${inviteId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setInvites((prev) => prev.filter((inv) => inv.id !== inviteId));
+      setInviteSuccess('Invite deleted');
+    } catch (error) {
+      setInviteError(error.response?.data?.detail || 'Unable to delete invite');
+    }
+  };
+
   const handleCopyInvite = (code, inviteId) => {
     navigator.clipboard.writeText(code);
     setCopiedInviteId(inviteId);
@@ -485,18 +503,25 @@ const TeacherDashboard = () => {
                       <span>{invite.uses}/{invite.max_uses ?? '∞'}</span>
                       <span>{formatExpiry(invite.expires_at)}</span>
                       <span className={`invite-status ${statusLabel.toLowerCase()}`}>{statusLabel}</span>
-                      <div className="invite-actions">
-                        <button
-                          className="btn-secondary"
-                          type="button"
-                          onClick={() => handleToggleInvite(invite.id)}
-                        >
-                          {invite.is_active ? 'Disable' : 'Enable'}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+                       <div className="invite-actions">
+                         <button
+                           className="btn-secondary"
+                           type="button"
+                           onClick={() => handleToggleInvite(invite.id)}
+                         >
+                           {invite.is_active ? 'Disable' : 'Enable'}
+                         </button>
+                         <button
+                           className="btn-secondary btn-danger-inline"
+                           type="button"
+                           onClick={() => handleDeleteInvite(invite.id)}
+                         >
+                           Delete
+                         </button>
+                       </div>
+                     </div>
+                   );
+                 })}
               </div>
             )}
           </div>
