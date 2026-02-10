@@ -30,11 +30,11 @@ const AdminCenter = ({ defaultSection = 'overview' }) => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [saving, setSaving] = useState(false);
 
-  // Email templates
+  // Email templates (platform admin only)
   const [templates, setTemplates] = useState([]);
   const [templatesLoading, setTemplatesLoading] = useState(false);
 
-  // Modules + subjects
+  // Modules + subjects (platform admin only)
   const [modules, setModules] = useState([]);
   const [modulesLoading, setModulesLoading] = useState(false);
   const [subjects, setSubjects] = useState([]);
@@ -48,7 +48,7 @@ const AdminCenter = ({ defaultSection = 'overview' }) => {
     build_path: ''
   });
 
-  // Organizations
+  // Organizations (platform admin only)
   const [organizations, setOrganizations] = useState([]);
   const [orgLoading, setOrgLoading] = useState(false);
   const [newOrg, setNewOrg] = useState({ name: '', domain: '' });
@@ -113,17 +113,20 @@ const AdminCenter = ({ defaultSection = 'overview' }) => {
 
   useEffect(() => {
     if (!isAdmin) return;
-    // load lightweight lists up front
-    fetchOrganizations();
+    if (isPlatformAdmin) {
+      fetchOrganizations();
+    }
   }, [isAdmin]);
 
   useEffect(() => {
     if (!isAdmin) return;
     // lazy-load big sections
-    if (activeSection === 'templates') fetchTemplates();
-    if (activeSection === 'modules') {
-      fetchSubjects();
-      fetchModules();
+    if (isPlatformAdmin) {
+      if (activeSection === 'templates') fetchTemplates();
+      if (activeSection === 'modules') {
+        fetchSubjects();
+        fetchModules();
+      }
     }
   }, [activeSection, isAdmin]);
 
@@ -319,30 +322,38 @@ const AdminCenter = ({ defaultSection = 'overview' }) => {
           >
             <Users size={16} /> Users
           </button>
-          <button
-            className={`sidebar-item ${activeSection === 'telemetry' ? 'active' : ''}`}
-            onClick={() => setActiveSection('telemetry')}
-          >
-            <Database size={16} /> Data
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === 'templates' ? 'active' : ''}`}
-            onClick={() => setActiveSection('templates')}
-          >
-            <Mail size={16} /> Email Templates
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === 'modules' ? 'active' : ''}`}
-            onClick={() => setActiveSection('modules')}
-          >
-            <Gamepad2 size={16} /> Game Modules
-          </button>
-          <button
-            className={`sidebar-item ${activeSection === 'orgs' ? 'active' : ''}`}
-            onClick={() => setActiveSection('orgs')}
-          >
-            <Building2 size={16} /> Organizations
-          </button>
+          {isPlatformAdmin && (
+            <button
+              className={`sidebar-item ${activeSection === 'telemetry' ? 'active' : ''}`}
+              onClick={() => setActiveSection('telemetry')}
+            >
+              <Database size={16} /> Data
+            </button>
+          )}
+          {isPlatformAdmin && (
+            <button
+              className={`sidebar-item ${activeSection === 'templates' ? 'active' : ''}`}
+              onClick={() => setActiveSection('templates')}
+            >
+              <Mail size={16} /> Email Templates
+            </button>
+          )}
+          {isPlatformAdmin && (
+            <button
+              className={`sidebar-item ${activeSection === 'modules' ? 'active' : ''}`}
+              onClick={() => setActiveSection('modules')}
+            >
+              <Gamepad2 size={16} /> Game Modules
+            </button>
+          )}
+          {isPlatformAdmin && (
+            <button
+              className={`sidebar-item ${activeSection === 'orgs' ? 'active' : ''}`}
+              onClick={() => setActiveSection('orgs')}
+            >
+              <Building2 size={16} /> Organizations
+            </button>
+          )}
         </aside>
 
         <div className="account-content">
@@ -391,9 +402,14 @@ const AdminCenter = ({ defaultSection = 'overview' }) => {
 
           {activeSection === 'users' && <AdminUsers />}
 
-          {activeSection === 'telemetry' && <AdminTelemetry />}
+          {activeSection === 'telemetry' && (
+            isPlatformAdmin
+              ? <AdminTelemetry />
+              : <section className="account-card"><h2>Platform Admin Only</h2><p>You do not have access to data exports.</p></section>
+          )}
 
           {activeSection === 'templates' && (
+            isPlatformAdmin ? (
             <section className="account-card">
               <h2><Mail size={18} /> Email Templates</h2>
               {templatesLoading ? (
@@ -443,9 +459,13 @@ const AdminCenter = ({ defaultSection = 'overview' }) => {
                 </div>
               )}
             </section>
+            ) : (
+              <section className="account-card"><h2>Platform Admin Only</h2><p>You do not have access to email templates.</p></section>
+            )
           )}
 
           {activeSection === 'modules' && (
+            isPlatformAdmin ? (
             <section className="account-card">
               <h2><Gamepad2 size={18} /> Game Modules</h2>
               <div className="admin-grid">
@@ -584,9 +604,13 @@ const AdminCenter = ({ defaultSection = 'overview' }) => {
                 )}
               </div>
             </section>
+            ) : (
+              <section className="account-card"><h2>Platform Admin Only</h2><p>You do not have access to module management.</p></section>
+            )
           )}
 
           {activeSection === 'orgs' && (
+            isPlatformAdmin ? (
             <section className="account-card">
               <h2><Building2 size={18} /> Organizations</h2>
 
@@ -661,6 +685,9 @@ const AdminCenter = ({ defaultSection = 'overview' }) => {
                 </div>
               )}
             </section>
+            ) : (
+              <section className="account-card"><h2>Platform Admin Only</h2><p>You do not have access to organization management.</p></section>
+            )
           )}
         </div>
       </div>

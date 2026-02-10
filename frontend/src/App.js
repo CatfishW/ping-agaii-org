@@ -35,6 +35,15 @@ const AdminGate = ({ children }) => {
   return children;
 };
 
+const PlatformAdminGate = ({ children }) => {
+  const { isAuthenticated, user } = useAuth();
+  const ok = isAuthenticated && user && user.role === 'platform_admin';
+  if (!ok) {
+    return <div className="container"><h2>Platform admin access required.</h2></div>;
+  }
+  return children;
+};
+
 const TeachingGate = ({ onLoginClick, children }) => {
   const { isAuthenticated, user } = useAuth();
   const isTeacher = isAuthenticated && user && (
@@ -129,11 +138,38 @@ function App() {
             />
 
             <Route
+              path="/admin/modules"
+              element={
+                <PlatformAdminGate>
+                  <AdminCenter defaultSection="modules" />
+                </PlatformAdminGate>
+              }
+            />
+
+            <Route
+              path="/admin/templates"
+              element={
+                <PlatformAdminGate>
+                  <AdminCenter defaultSection="templates" />
+                </PlatformAdminGate>
+              }
+            />
+
+            <Route
+              path="/admin/organizations"
+              element={
+                <PlatformAdminGate>
+                  <AdminCenter defaultSection="orgs" />
+                </PlatformAdminGate>
+              }
+            />
+
+            <Route
               path="/admin/telemetry"
               element={
-                <AdminGate>
+                <PlatformAdminGate>
                   <AdminCenter defaultSection="telemetry" />
-                </AdminGate>
+                </PlatformAdminGate>
               }
             />
             <Route path="/research" element={<ResearchHub />} />

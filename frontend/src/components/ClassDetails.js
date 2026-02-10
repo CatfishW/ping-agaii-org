@@ -324,7 +324,7 @@ const ClassDetails = () => {
 
         <div className="tab-content">
           {activeTab === 'students' && (
-            <StudentsTab students={students} />
+            <StudentsTab classId={classId} students={students} onRefresh={fetchStudents} />
           )}
           {activeTab === 'modules' && (
             <ModulesTab classId={classId} joinCode={classData.join_code} totalStudents={students.length} />
@@ -338,25 +338,104 @@ const ClassDetails = () => {
   );
 };
 
-const StudentsTab = ({ students }) => {
+const StudentsTab = ({ classId, students, onRefresh }) => {
+  const { user } = useAuth();
+  const canManage = user?.role === 'teacher' || user?.role === 'org_admin' || user?.role === 'platform_admin';
+  const [adding, setAdding] = useState(false);
+  const [email, setEmail] = useState('');
+  const [msg, setMsg] = useState('');
+
+  const addStudent = async () => {
+    if (!email.trim()) {
+      setMsg('Enter a student email.');
+      return;
+    }
+    setAdding(true);
+    setMsg('');
+    try {
+      const token = localStorage.getItem('access_token');
+      await axios.post(
+        `/api/classes/${classId}/students`,
+        { email: email.trim() },
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      setEmail('');
+      onRefresh();
+    } catch (error) {
+      setMsg(error.response?.data?.detail || 'Failed to add student.');
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const removeStudent = async (student) => {
+    if (!window.confirm(`Remove ${student.name} from this class?`)) {
+      return;
+    }
+    setMsg('');
+    try {
+      const token = localStorage.getItem('access_token');
+      await axios.delete(
+        `/api/classes/${classId}/students/${student.user_id}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      onRefresh();
+    } catch (error) {
+      setMsg(error.response?.data?.detail || 'Failed to remove student.');
+    }
+  };
+
   if (students.length === 0) {
     return (
       <div className="empty-tab-state">
         <Users size={64} color="#ccc" />
         <h3>No students yet</h3>
         <p>Students will appear here once they join using the class code</p>
+        {canManage && (
+          <div className="student-manage">
+            <h4>Add Student</h4>
+            <div className="student-manage-row">
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="student@email.com"
+              />
+              <button className="btn-primary" type="button" onClick={addStudent} disabled={adding}>
+                {adding ? 'Adding...' : 'Add'}
+              </button>
+            </div>
+            {msg && <div className="student-manage-msg">{msg}</div>}
+          </div>
+        )}
       </div>
     );
   }
 
   return (
     <div className="students-list">
+      {canManage && (
+        <div className="student-manage">
+          <h4>Add Student</h4>
+          <div className="student-manage-row">
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="student@email.com"
+            />
+            <button className="btn-primary" type="button" onClick={addStudent} disabled={adding}>
+              {adding ? 'Adding...' : 'Add'}
+            </button>
+          </div>
+          {msg && <div className="student-manage-msg">{msg}</div>}
+        </div>
+      )}
       <div className="students-table">
         <div className="table-header">
           <div>Student</div>
           <div>Sessions</div>
           <div>Events</div>
           <div>Last Active</div>
+          {canManage && <div></div>}
         </div>
         
         {students.map((student, index) => (
@@ -379,6 +458,13 @@ const StudentsTab = ({ students }) => {
                 ? new Date(student.last_active).toLocaleDateString()
                 : 'Never'}
             </div>
+            {canManage && (
+              <div>
+                <button className="btn-secondary btn-danger-inline" type="button" onClick={() => removeStudent(student)}>
+                  Remove
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
