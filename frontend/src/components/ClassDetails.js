@@ -1,20 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Users, Activity, Copy, RefreshCw, 
-  Settings, Trash2, UserPlus, BookOpen, ExternalLink
+  ArrowLeft,
+  Users,
+  Activity,
+  Copy,
+  RefreshCw,
+  Trash2,
+  UserPlus,
+  BookOpen,
+  ExternalLink,
+  ArrowRightLeft
 } from 'lucide-react';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 import './ClassDetails.css';
 
 const ClassDetails = () => {
   const { classId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [classData, setClassData] = useState(null);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('students');
   const [copySuccess, setCopySuccess] = useState(false);
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [teachers, setTeachers] = useState([]);
+  const [teacherId, setTeacherId] = useState('');
+  const [transferMessage, setTransferMessage] = useState('');
+
+  const canTransfer = user?.role === 'org_admin' || user?.role === 'platform_admin';
 
   useEffect(() => {
     fetchClassDetails();
@@ -29,10 +45,63 @@ const ClassDetails = () => {
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       setClassData(response.data);
+      if (canTransfer) {
+        setTeacherId(String(response.data.teacher_id || ''));
+      }
       setLoading(false);
     } catch (error) {
       console.error('Error fetching class details:', error);
       setLoading(false);
+    }
+  };
+
+  const fetchTeachers = async () => {
+    setTransferMessage('');
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get('/api/admin/users', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const all = response.data || [];
+      const teacherRows = all
+        .filter((u) => u.role === 'teacher' && u.is_active)
+        .sort((a, b) => String(a.full_name || a.email || '').localeCompare(String(b.full_name || b.email || '')));
+      setTeachers(teacherRows);
+    } catch (error) {
+      setTransferMessage(error.response?.data?.detail || 'Failed to load teachers.');
+    }
+  };
+
+  useEffect(() => {
+    if (!canTransfer || !showTransfer) return;
+    fetchTeachers();
+  }, [canTransfer, showTransfer]);
+
+  const submitTransfer = async () => {
+    if (!teacherId) {
+      setTransferMessage('Select a teacher.');
+      return;
+    }
+    if (!window.confirm('Transfer this class to the selected teacher?')) {
+      return;
+    }
+    setTransferMessage('');
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.put(
+        `/api/classes/${classId}/teacher`,
+        { teacher_id: Number(teacherId) },
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      setClassData((prev) => ({
+        ...prev,
+        teacher_id: response.data.teacher_id,
+        teacher_name: response.data.teacher_name,
+        teacher_email: response.data.teacher_email
+      }));
+      setShowTransfer(false);
+    } catch (error) {
+      setTransferMessage(error.response?.data?.detail || 'Failed to transfer class.');
     }
   };
 
@@ -122,14 +191,49 @@ const ClassDetails = () => {
         <div className="class-title-section">
           <h1>{classData.name}</h1>
           {classData.description && <p>{classData.description}</p>}
+          {classData.teacher_name && (
+            <p className="class-teacher">Teacher: {classData.teacher_name}</p>
+          )}
         </div>
 
         <div className="class-actions">
           <button className="btn-icon" onClick={handleDeleteClass} title="Delete Class">
             <Trash2 size={20} />
           </button>
+          {canTransfer && (
+            <button className="btn-icon" onClick={() => setShowTransfer(true)} title="Transfer Class">
+              <ArrowRightLeft size={20} />
+            </button>
+          )}
         </div>
       </div>
+
+      {showTransfer && (
+        <div className="transfer-modal-overlay" onMouseDown={() => setShowTransfer(false)}>
+          <div className="transfer-modal" onMouseDown={(e) => e.stopPropagation()}>
+            <h3>Transfer Class</h3>
+            <p>Select a teacher in this organization.</p>
+            {transferMessage && <div className="transfer-message">{transferMessage}</div>}
+            <label>
+              Teacher
+              <select value={teacherId} onChange={(e) => setTeacherId(e.target.value)}>
+                <option value="">Select teacher</option>
+                {teachers.map((t) => (
+                  <option key={t.id} value={t.id}>{t.full_name || t.email} (#{t.id})</option>
+                ))}
+              </select>
+            </label>
+            <div className="transfer-actions">
+              <button className="btn-secondary" type="button" onClick={() => setShowTransfer(false)}>
+                Cancel
+              </button>
+              <button className="btn-primary" type="button" onClick={submitTransfer}>
+                Transfer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Overview */}
       <div className="class-stats-overview">
@@ -223,7 +327,7 @@ const ClassDetails = () => {
             <StudentsTab students={students} />
           )}
           {activeTab === 'modules' && (
-            <ModulesTab classId={classId} joinCode={classData.join_code} />
+            <ModulesTab classId={classId} joinCode={classData.join_code} totalStudents={students.length} />
           )}
           {activeTab === 'analytics' && (
             <AnalyticsTab classId={classId} students={students} />
@@ -282,32 +386,39 @@ const StudentsTab = ({ students }) => {
   );
 };
 
-const ModulesTab = ({ classId, joinCode }) => {
+const ModulesTab = ({ classId, joinCode, totalStudents }) => {
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [copiedId, setCopiedId] = useState('');
+  const [showActiveOnly, setShowActiveOnly] = useState(true);
+  const [expandedId, setExpandedId] = useState('');
+  const [studentRows, setStudentRows] = useState({});
+
+  const loadTasks = async () => {
+    setLoading(true);
+    setMessage('');
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get(
+        `/api/classes/${classId}/module-tasks`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` },
+          params: { only_active: showActiveOnly ? true : undefined }
+        }
+      );
+      setModules(response.data || []);
+    } catch (error) {
+      setMessage(error.response?.data?.detail || 'Failed to load class module tasks.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      setMessage('');
-      try {
-        const token = localStorage.getItem('access_token');
-        const response = await axios.get(
-          `/api/classes/${classId}/modules`,
-          { headers: { 'Authorization': `Bearer ${token}` } }
-        );
-        setModules(response.data || []);
-      } catch (error) {
-        setMessage(error.response?.data?.detail || 'Failed to load class modules.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (classId) load();
-  }, [classId]);
+    if (!classId) return;
+    loadTasks();
+  }, [classId, showActiveOnly]);
 
   const copyModuleLink = async (moduleId) => {
     try {
@@ -325,52 +436,140 @@ const ModulesTab = ({ classId, joinCode }) => {
     window.open(url, '_blank');
   };
 
+  const toggleActive = async (mod, nextActive) => {
+    setMessage('');
+    try {
+      const token = localStorage.getItem('access_token');
+      await axios.put(
+        `/api/classes/${classId}/module-tasks/${mod.module_id}`,
+        { is_active: nextActive },
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      setModules((prev) => prev.map((m) => (m.module_id === mod.module_id ? { ...m, is_active: nextActive } : m)));
+      if (showActiveOnly && !nextActive) {
+        await loadTasks();
+      }
+    } catch (error) {
+      setMessage(error.response?.data?.detail || 'Failed to update task status.');
+    }
+  };
+
+  const loadStudentStatus = async (moduleId) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get(
+        `/api/classes/${classId}/module-tasks/${moduleId}/students`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      setStudentRows((prev) => ({ ...prev, [moduleId]: response.data || [] }));
+    } catch (error) {
+      setMessage(error.response?.data?.detail || 'Failed to load student activity.');
+    }
+  };
+
+  const toggleExpand = async (moduleId) => {
+    const next = expandedId === moduleId ? '' : moduleId;
+    setExpandedId(next);
+    if (next && !studentRows[next]) {
+      await loadStudentStatus(next);
+    }
+  };
+
   if (loading) {
     return <div className="empty-tab-state"><p>Loading modules...</p></div>;
-  }
-
-  if (message) {
-    return <div className="empty-tab-state"><p>{message}</p></div>;
-  }
-
-  if (!modules.length) {
-    return (
-      <div className="empty-tab-state">
-        <BookOpen size={64} color="#ccc" />
-        <h3>No modules available</h3>
-        <p>This class has no published modules enabled for its organization.</p>
-      </div>
-    );
   }
 
   return (
     <div className="modules-tab">
       <div className="modules-tab-head">
         <div>
-          <h3>Send Modules to Students</h3>
-          <p>Share a module link. Students should join this class first using code <strong>{joinCode}</strong>.</p>
+          <h3>Class Tasks</h3>
+          <p>Students should join this class first using code <strong>{joinCode}</strong>.</p>
+        </div>
+        <div className="modules-tab-controls">
+          <label className="toggle">
+            <input
+              type="checkbox"
+              checked={showActiveOnly}
+              onChange={(e) => setShowActiveOnly(e.target.checked)}
+            />
+            <span>Active only</span>
+          </label>
         </div>
       </div>
 
-      <div className="modules-grid">
-        {modules.map((mod) => (
-          <div key={mod.id} className="module-card">
-            <div className="module-card-top">
-              <div className="module-title">{mod.title}</div>
-              <div className="module-meta">{mod.subject}</div>
+      {message && <div className="modules-message">{message}</div>}
+
+      {!modules.length ? (
+        <div className="empty-tab-state">
+          <BookOpen size={64} color="#ccc" />
+          <h3>No modules found</h3>
+          <p>Enable published modules for this organization first.</p>
+        </div>
+      ) : (
+        <div className="modules-grid">
+          {modules.map((mod) => (
+            <div key={mod.module_id} className="module-card">
+              <div className="module-card-top">
+                <div className="module-title">{mod.title}</div>
+                <div className="module-meta">{mod.subject}</div>
+              </div>
+
+              <div className="module-row">
+                <label className="toggle">
+                  <input
+                    type="checkbox"
+                    checked={!!mod.is_active}
+                    onChange={(e) => toggleActive(mod, e.target.checked)}
+                  />
+                  <span>Active</span>
+                </label>
+                <div className="module-progress">
+                  Played {mod.played_students} / {mod.total_students || totalStudents}
+                </div>
+              </div>
+
+              <div className="module-actions">
+                <button className="btn-secondary" type="button" onClick={() => copyModuleLink(mod.module_id)}>
+                  <Copy size={16} />
+                  {copiedId === mod.module_id ? 'Copied' : 'Copy Link'}
+                </button>
+                <button className="btn-secondary" type="button" onClick={() => toggleExpand(mod.module_id)}>
+                  <Users size={16} />
+                  {expandedId === mod.module_id ? 'Hide Students' : 'View Students'}
+                </button>
+                <button className="btn-primary" type="button" onClick={() => openModule(mod.module_id)}>
+                  <ExternalLink size={16} /> Open
+                </button>
+              </div>
+
+              {expandedId === mod.module_id && (
+                <div className="module-students">
+                  <div className="module-students-head">
+                    <span>Student</span>
+                    <span>Played</span>
+                    <span>Sessions</span>
+                    <span>Events</span>
+                    <span>Last Active</span>
+                  </div>
+                  {(studentRows[mod.module_id] || []).map((s) => (
+                    <div key={s.user_id} className="module-students-row">
+                      <span>{s.name}</span>
+                      <span>{s.played ? 'Yes' : 'No'}</span>
+                      <span>{s.total_sessions}</span>
+                      <span>{s.total_events}</span>
+                      <span>{s.last_active ? new Date(s.last_active).toLocaleDateString() : '—'}</span>
+                    </div>
+                  ))}
+                  {studentRows[mod.module_id] && studentRows[mod.module_id].length === 0 && (
+                    <div className="module-students-empty">No students in this class yet.</div>
+                  )}
+                </div>
+              )}
             </div>
-            <div className="module-actions">
-              <button className="btn-secondary" type="button" onClick={() => copyModuleLink(mod.module_id)}>
-                <Copy size={16} />
-                {copiedId === mod.module_id ? 'Copied' : 'Copy Link'}
-              </button>
-              <button className="btn-primary" type="button" onClick={() => openModule(mod.module_id)}>
-                <ExternalLink size={16} /> Open
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

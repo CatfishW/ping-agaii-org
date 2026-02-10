@@ -21,6 +21,8 @@ const AccountCenter = () => {
   const [saving, setSaving] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [joinMessage, setJoinMessage] = useState({ type: '', text: '' });
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [classTasks, setClassTasks] = useState([]);
 
   useEffect(() => {
     if (user) {
@@ -32,6 +34,29 @@ const AccountCenter = () => {
       });
     }
   }, [user]);
+
+  const fetchMyTasks = async () => {
+    if (user?.role !== 'student') {
+      return;
+    }
+    setTasksLoading(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get('/api/classes/my-tasks', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setClassTasks(response.data || []);
+    } catch (error) {
+      // non-blocking
+    } finally {
+      setTasksLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMyTasks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.role]);
 
   const handleJoinClass = async () => {
     if (!joinCode.trim()) {
@@ -199,6 +224,44 @@ const AccountCenter = () => {
                   {joinMessage.text && (
                     <div className={joinMessage.type === 'success' ? 'success-message' : 'error-message'}>
                       {joinMessage.text}
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {user?.role === 'student' && (
+                <section className="account-card">
+                  <h2><Users size={18} /> My Class Tasks</h2>
+                  <p className="muted">Only active tasks assigned by your classes appear here.</p>
+                  {tasksLoading ? (
+                    <p>Loading tasks...</p>
+                  ) : (
+                    <div className="tasks-list">
+                      {classTasks.map((item) => (
+                        <div key={item.class_id} className="task-class">
+                          <div className="task-class-head">
+                            <strong>{item.class_name}</strong>
+                            <span className="muted">{item.teacher_name ? `Teacher: ${item.teacher_name}` : ''}</span>
+                          </div>
+                          {item.modules?.length ? (
+                            <div className="task-modules">
+                              {item.modules.map((m) => (
+                                <button
+                                  key={m.module_id}
+                                  className="btn-secondary"
+                                  type="button"
+                                  onClick={() => window.open(`/game/${m.module_id}`, '_blank')}
+                                >
+                                  {m.title}
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="muted">No active tasks yet.</p>
+                          )}
+                        </div>
+                      ))}
+                      {!classTasks.length && <p className="muted">No active tasks yet.</p>}
                     </div>
                   )}
                 </section>

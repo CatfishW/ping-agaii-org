@@ -113,6 +113,33 @@
   font-size: 0.95rem;
 }
 
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.task-class {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1rem;
+  background: var(--bg-light);
+}
+
+.task-class-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.task-modules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
 .account-divider {
   height: 1px;
   background: var(--border-color);

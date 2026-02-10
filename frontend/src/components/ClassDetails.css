@@ -36,6 +36,12 @@
   color: var(--text-muted);
 }
 
+.class-teacher {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
 .class-actions {
   display: flex;
   gap: 1rem;
@@ -189,6 +195,23 @@
   margin-bottom: 1.25rem;
 }
 
+.modules-tab-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.modules-message {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  background: #fffaf4;
+  border: 1px solid #f0d7c5;
+  color: #6b3b2a;
+  font-weight: 600;
+}
+
 .modules-tab-head h3 {
   margin: 0;
   color: var(--primary-color);
@@ -235,9 +258,118 @@
   flex-wrap: wrap;
 }
 
+.module-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.module-progress {
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.module-students {
+  border-top: 1px solid var(--border-color);
+  padding-top: 0.9rem;
+}
+
+.module-students-head,
+.module-students-row {
+  display: grid;
+  grid-template-columns: 1.6fr 0.8fr 0.8fr 0.8fr 1fr;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.module-students-head {
+  font-weight: 800;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+.module-students-row {
+  padding: 0.45rem 0;
+  border-bottom: 1px solid #eef1f4;
+  color: var(--text-color);
+}
+
+.module-students-empty {
+  color: var(--text-muted);
+  padding: 0.75rem 0;
+}
+
+.transfer-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 50;
+}
+
+.transfer-modal {
+  background: white;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 520px;
+  padding: 1.25rem 1.25rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.transfer-modal h3 {
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.transfer-modal p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.transfer-message {
+  padding: 0.65rem 0.8rem;
+  border-radius: 10px;
+  background: #ffebee;
+  color: #c62828;
+  font-weight: 700;
+}
+
+.transfer-modal label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+
+.transfer-modal select {
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  font-size: 0.95rem;
+}
+
+.transfer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
 @media (max-width: 600px) {
   .module-actions {
     flex-direction: column;
+  }
+
+  .module-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
