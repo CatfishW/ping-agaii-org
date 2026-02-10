@@ -180,6 +180,67 @@
   min-height: 400px;
 }
 
+/* Modules Tab */
+.modules-tab-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.modules-tab-head h3 {
+  margin: 0;
+  color: var(--primary-color);
+  font-size: 1.35rem;
+}
+
+.modules-tab-head p {
+  margin: 0.5rem 0 0;
+  color: var(--text-muted);
+}
+
+.modules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.module-card {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1rem;
+  background: white;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.module-title {
+  font-weight: 800;
+  color: var(--primary-color);
+  font-size: 1.05rem;
+}
+
+.module-meta {
+  margin-top: 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.module-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .module-actions {
+    flex-direction: column;
+  }
+}
+
 /* Students Tab */
 .students-list {
   width: 100%;

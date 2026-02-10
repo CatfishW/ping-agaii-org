@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { 
+import {
   ArrowLeft, Users, Activity, Copy, RefreshCw, 
-  Settings, Trash2, UserPlus, BookOpen 
+  Settings, Trash2, UserPlus, BookOpen, ExternalLink
 } from 'lucide-react';
 import axios from 'axios';
 import './ClassDetails.css';
@@ -223,7 +223,7 @@ const ClassDetails = () => {
             <StudentsTab students={students} />
           )}
           {activeTab === 'modules' && (
-            <ModulesTab classId={classId} />
+            <ModulesTab classId={classId} joinCode={classData.join_code} />
           )}
           {activeTab === 'analytics' && (
             <AnalyticsTab classId={classId} students={students} />
@@ -282,12 +282,95 @@ const StudentsTab = ({ students }) => {
   );
 };
 
-const ModulesTab = ({ classId }) => {
+const ModulesTab = ({ classId, joinCode }) => {
+  const [modules, setModules] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [copiedId, setCopiedId] = useState('');
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setMessage('');
+      try {
+        const token = localStorage.getItem('access_token');
+        const response = await axios.get(
+          `/api/classes/${classId}/modules`,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+        setModules(response.data || []);
+      } catch (error) {
+        setMessage(error.response?.data?.detail || 'Failed to load class modules.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (classId) load();
+  }, [classId]);
+
+  const copyModuleLink = async (moduleId) => {
+    try {
+      const url = `${window.location.origin}/game/${moduleId}`;
+      await navigator.clipboard.writeText(url);
+      setCopiedId(moduleId);
+      setTimeout(() => setCopiedId(''), 1800);
+    } catch (error) {
+      setMessage('Copy failed. Please copy the link manually.');
+    }
+  };
+
+  const openModule = (moduleId) => {
+    const url = `/game/${moduleId}`;
+    window.open(url, '_blank');
+  };
+
+  if (loading) {
+    return <div className="empty-tab-state"><p>Loading modules...</p></div>;
+  }
+
+  if (message) {
+    return <div className="empty-tab-state"><p>{message}</p></div>;
+  }
+
+  if (!modules.length) {
+    return (
+      <div className="empty-tab-state">
+        <BookOpen size={64} color="#ccc" />
+        <h3>No modules available</h3>
+        <p>This class has no published modules enabled for its organization.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="empty-tab-state">
-      <BookOpen size={64} color="#ccc" />
-      <h3>Module assignment coming soon</h3>
-      <p>Assign learning modules to your class</p>
+    <div className="modules-tab">
+      <div className="modules-tab-head">
+        <div>
+          <h3>Send Modules to Students</h3>
+          <p>Share a module link. Students should join this class first using code <strong>{joinCode}</strong>.</p>
+        </div>
+      </div>
+
+      <div className="modules-grid">
+        {modules.map((mod) => (
+          <div key={mod.id} className="module-card">
+            <div className="module-card-top">
+              <div className="module-title">{mod.title}</div>
+              <div className="module-meta">{mod.subject}</div>
+            </div>
+            <div className="module-actions">
+              <button className="btn-secondary" type="button" onClick={() => copyModuleLink(mod.module_id)}>
+                <Copy size={16} />
+                {copiedId === mod.module_id ? 'Copied' : 'Copy Link'}
+              </button>
+              <button className="btn-primary" type="button" onClick={() => openModule(mod.module_id)}>
+                <ExternalLink size={16} /> Open
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
