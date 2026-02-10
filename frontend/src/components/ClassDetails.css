@@ -415,6 +415,16 @@
   font-weight: 700;
 }
 
+.btn-danger-inline {
+  border-color: #f0c8c8;
+  color: #b42318;
+}
+
+.btn-danger-inline:hover {
+  background: #ffebee;
+  border-color: #e6a6a6;
+}
+
 .table-header {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
