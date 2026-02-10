@@ -361,28 +361,60 @@ const AccountCenter = () => {
 
         <div className="account-content">
           {activeSection === 'profile' && (
-            <section className="account-card">
-              <h2><User size={18} /> Profile</h2>
-              <label>
-                Full name
-                <input name="full_name" value={profile.full_name} onChange={handleProfileChange} />
-              </label>
-              <label>
-                School
-                <input name="school" value={profile.school} onChange={handleProfileChange} />
-              </label>
-              <label>
-                Course
-                <input name="course" value={profile.course} onChange={handleProfileChange} />
-              </label>
-              <label>
-                Bio
-                <textarea name="bio" value={profile.bio} onChange={handleProfileChange} rows="3" />
-              </label>
-              <button className="btn-primary" disabled={saving} onClick={saveProfile}>
-                Save profile
-              </button>
-            </section>
+            <>
+              <section className="account-card">
+                <h2><User size={18} /> Profile</h2>
+                <label>
+                  Full name
+                  <input name="full_name" value={profile.full_name} onChange={handleProfileChange} />
+                </label>
+                <label>
+                  School
+                  <input name="school" value={profile.school} onChange={handleProfileChange} />
+                </label>
+                <label>
+                  Course
+                  <input name="course" value={profile.course} onChange={handleProfileChange} />
+                </label>
+                <label>
+                  Bio
+                  <textarea name="bio" value={profile.bio} onChange={handleProfileChange} rows="3" />
+                </label>
+                <button className="btn-primary" disabled={saving} onClick={saveProfile}>
+                  Save profile
+                </button>
+              </section>
+
+              <section className="account-card">
+                <h2><Users size={18} /> Join a Class</h2>
+                <p className="muted">Enter the join code your teacher gave you to join a class.</p>
+                <form
+                  className="form-row"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    handleJoinClass();
+                  }}
+                >
+                  <input
+                    value={joinCode}
+                    onChange={(event) => {
+                      setJoinCode(event.target.value);
+                      if (joinMessage.text) setJoinMessage({ type: '', text: '' });
+                    }}
+                    placeholder="Class join code"
+                    autoComplete="off"
+                  />
+                  <button className="btn-primary" type="submit" disabled={saving}>
+                    Join
+                  </button>
+                </form>
+                {joinMessage.text && (
+                  <div className={joinMessage.type === 'success' ? 'success-message' : 'error-message'}>
+                    {joinMessage.text}
+                  </div>
+                )}
+              </section>
+            </>
           )}
 
           
