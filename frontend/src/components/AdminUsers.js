@@ -106,6 +106,24 @@ const AdminUsers = () => {
     }
   };
 
+  const hardDeleteUser = async (userRow) => {
+    setMessage({ type: '', text: '' });
+    const label = userRow.email || userRow.username || `User ${userRow.id}`;
+    if (!window.confirm(`PERMANENTLY delete ${label}? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await axios.delete(`/api/admin/users/${userRow.id}/hard`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+      });
+      setUsers((prev) => prev.filter((item) => item.id !== userRow.id));
+      setMessage({ type: 'success', text: `Deleted ${label}` });
+    } catch (error) {
+      setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to delete user.' });
+    }
+  };
+
   if (!isAdmin) {
     return (
       <div className="admin-users">
@@ -206,6 +224,11 @@ const AdminUsers = () => {
               <button className="btn-danger" type="button" onClick={() => deactivateUser(userRow)}>
                 <Trash2 size={16} /> Deactivate
               </button>
+              {isPlatformAdmin && (
+                <button className="btn-danger" type="button" onClick={() => hardDeleteUser(userRow)}>
+                  <Trash2 size={16} /> Delete
+                </button>
+              )}
             </div>
           </div>
         ))}
