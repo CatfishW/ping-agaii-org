@@ -4,6 +4,10 @@
   padding: 0 1.5rem 3rem;
 }
 
+.research-empty {
+  min-height: 60vh;
+}
+
 .research-hero {
   display: flex;
   justify-content: space-between;

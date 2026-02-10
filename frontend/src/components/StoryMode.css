@@ -1,0 +1,97 @@
+.story-mode {
+  margin: 2.25rem auto 1.5rem;
+}
+
+.story-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.story-pill {
+  display: inline-block;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(87, 21, 11, 0.12);
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.08rem;
+  text-transform: uppercase;
+  margin-bottom: 0.65rem;
+}
+
+.story-header h2 {
+  font-size: 1.75rem;
+  color: var(--primary-color);
+  margin-bottom: 0.4rem;
+}
+
+.story-header p {
+  color: var(--text-muted);
+}
+
+.story-strip {
+  background: linear-gradient(135deg, rgba(255, 204, 0, 0.12), rgba(255, 255, 255, 1));
+  border: 1px solid rgba(87, 21, 11, 0.14);
+  border-radius: 18px;
+  box-shadow: var(--card-shadow);
+  padding: 1.25rem 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.story-strip-left {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+}
+
+.story-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(87, 21, 11, 0.08);
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.story-strip h3 {
+  margin: 0;
+  color: var(--primary-color);
+  font-size: 1.15rem;
+}
+
+.story-strip p {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted);
+}
+
+.story-strip-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.45rem;
+}
+
+.story-note {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 760px) {
+  .story-strip {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .story-strip-right {
+    align-items: stretch;
+  }
+}

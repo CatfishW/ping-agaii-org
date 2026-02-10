@@ -27,3 +27,9 @@
   max-width: 600px;
   text-align: center;
 }
+
+.site-footer {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  color: var(--text-muted);
+}

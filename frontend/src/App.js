@@ -7,6 +7,7 @@ import Hero from './components/Hero';
 import SimulationBrowser from './components/SimulationBrowser';
 import GameEmbed from './components/GameEmbed';
 import AuthModal from './components/AuthModal';
+import StoryMode from './components/StoryMode';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
 import CookiePolicy from './components/CookiePolicy';
@@ -86,6 +87,7 @@ function App() {
             <Route path="/" element={
               <>
                 <Hero searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+                <StoryMode />
                 <SimulationBrowser searchQuery={searchQuery} />
               </>
             } />
