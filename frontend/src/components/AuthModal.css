@@ -16,13 +16,18 @@
 .auth-modal {
   background: white;
   border-radius: 16px;
-  padding: 2.5rem;
   max-width: 450px;
   width: 100%;
   position: relative;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: modalSlideIn 0.3s ease-out;
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
+
 
 @keyframes modalSlideIn {
   from {
@@ -291,12 +296,26 @@
 }
 
 @media (max-width: 480px) {
-  .auth-modal {
+  .auth-modal-scroll {
     padding: 2rem 1.5rem;
   }
 
   .auth-modal-header h2 {
     font-size: 1.5rem;
+  }
+}
+
+@media (max-height: 700px) {
+  .auth-modal-scroll {
+    padding: 1.75rem 1.5rem;
+  }
+
+  .auth-modal-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .auth-tabs {
+    margin-bottom: 1.5rem;
   }
 }
 
@@ -321,4 +340,11 @@
 
 .forgot-link:hover {
   text-decoration: underline;
+}
+
+
+.auth-modal-scroll {
+  padding: 2.5rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }

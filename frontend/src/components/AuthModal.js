@@ -121,6 +121,8 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login', redirectUrl = '' })
           <X size={24} />
         </button>
 
+        <div className="auth-modal-scroll">
+
         <div className="auth-modal-header">
           <h2>{mode === 'login' ? 'Welcome Back' : mode === 'register' ? 'Create Account' : 'Reset Password'}</h2>
           <p>{mode === 'login' ? 'Sign in to continue' : mode === 'register' ? 'Join PING today' : 'We will email you a new password'}</p>
@@ -287,6 +289,7 @@ const AuthModal = ({ isOpen, onClose, defaultMode = 'login', redirectUrl = '' })
             )}
           </div>
         )}
+        </div>
       </div>
     </div>
   );
