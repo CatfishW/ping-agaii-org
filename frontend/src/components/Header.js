@@ -122,14 +122,16 @@ const Header = ({ currentPage, setCurrentPage, setSearchQuery, onLoginClick }) =
                         Account Center
                       </Link>
                       {isAdmin && (
-                        <Link to="/admin/telemetry" onClick={() => setShowUserMenu(false)}>
-                          <Database size={16} />
-                          Telemetry Data
-                        </Link>
-                        <Link to="/admin/users" onClick={() => setShowUserMenu(false)}>
-                          <Users size={16} />
-                          User Management
-                        </Link>
+                        <>
+                          <Link to="/admin/telemetry" onClick={() => setShowUserMenu(false)}>
+                            <Database size={16} />
+                            Telemetry Data
+                          </Link>
+                          <Link to="/admin/users" onClick={() => setShowUserMenu(false)}>
+                            <Users size={16} />
+                            User Management
+                          </Link>
+                        </>
                       )}
                       <button onClick={() => { logout(); setShowUserMenu(false); }}>
                         <LogOut size={16} />
