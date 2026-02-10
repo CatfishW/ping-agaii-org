@@ -17,8 +17,7 @@ import TeachingPublic from './components/TeachingPublic';
 import Initiatives from './components/Initiatives';
 import Dashboard from './components/Dashboard';
 import AccountCenter from './components/AccountCenter';
-import AdminTelemetry from './components/AdminTelemetry';
-import AdminUsers from './components/AdminUsers';
+import AdminCenter from './components/AdminCenter';
 import ResearchHub from './components/ResearchHub';
 import './App.css';
 
@@ -112,10 +111,19 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/account" element={<AccountCenter />} />
             <Route
+              path="/admin"
+              element={
+                <AdminGate>
+                  <AdminCenter />
+                </AdminGate>
+              }
+            />
+
+            <Route
               path="/admin/users"
               element={
                 <AdminGate>
-                  <AdminUsers />
+                  <AdminCenter defaultSection="users" />
                 </AdminGate>
               }
             />
@@ -124,7 +132,7 @@ function App() {
               path="/admin/telemetry"
               element={
                 <AdminGate>
-                  <AdminTelemetry />
+                  <AdminCenter defaultSection="telemetry" />
                 </AdminGate>
               }
             />

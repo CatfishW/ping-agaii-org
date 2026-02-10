@@ -1,0 +1,30 @@
+.admin-center-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.admin-center-card {
+  border: 1px solid var(--border-color);
+  background: white;
+  border-radius: 14px;
+  padding: 1rem 1rem;
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.admin-center-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--card-shadow);
+}
+
+.admin-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
