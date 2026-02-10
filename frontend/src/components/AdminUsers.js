@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { Users, Save } from 'lucide-react';
+import { Users, Save, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './AdminUsers.css';
 
@@ -14,10 +14,32 @@ const roleOptions = [
 const AdminUsers = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'org_admin' || user?.role === 'platform_admin';
+  const isPlatformAdmin = user?.role === 'platform_admin';
   const [users, setUsers] = useState([]);
+  const [organizations, setOrganizations] = useState([]);
   const [query, setQuery] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(false);
+
+  const orgNameById = useMemo(() => {
+    const map = new Map();
+    (organizations || []).forEach((org) => {
+      map.set(org.id, org.name);
+    });
+    return map;
+  }, [organizations]);
+
+  const fetchOrganizations = async () => {
+    try {
+      const response = await axios.get('/api/admin/organizations', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+      });
+      setOrganizations(response.data || []);
+    } catch (error) {
+      // Non-blocking: user list can still load.
+      console.error('Failed to load organizations', error);
+    }
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -37,6 +59,7 @@ const AdminUsers = () => {
 
   useEffect(() => {
     if (isAdmin) {
+      fetchOrganizations();
       fetchUsers();
     }
   }, [isAdmin]);
@@ -61,6 +84,25 @@ const AdminUsers = () => {
       setMessage({ type: 'success', text: `Saved user ${userRow.email || userRow.username}` });
     } catch (error) {
       setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to update user.' });
+    }
+  };
+
+  const deactivateUser = async (userRow) => {
+    setMessage({ type: '', text: '' });
+    const label = userRow.email || userRow.username || `User ${userRow.id}`;
+    if (!window.confirm(`Deactivate ${label}? This will disable login for this user.`)) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`/api/admin/users/${userRow.id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+      });
+      const updated = response.data;
+      setUsers((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+      setMessage({ type: 'success', text: `Deactivated ${label}` });
+    } catch (error) {
+      setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to deactivate user.' });
     }
   };
 
@@ -106,8 +148,8 @@ const AdminUsers = () => {
           <span>Role</span>
           <span>Active</span>
           <span>Verified</span>
-          <span>Org ID</span>
-          <span>Save</span>
+          <span>Organization</span>
+          <span>Actions</span>
         </div>
         {users.map((userRow) => (
           <div key={userRow.id} className="admin-users-row">
@@ -139,14 +181,32 @@ const AdminUsers = () => {
               />
               <span>Verified</span>
             </label>
-            <input
-              type="number"
-              value={userRow.organization_id || ''}
-              onChange={(event) => handleUserChange(userRow.id, 'organization_id', event.target.value ? Number(event.target.value) : null)}
-            />
-            <button className="btn-primary" onClick={() => saveUser(userRow)}>
-              <Save size={16} /> Save
-            </button>
+            <div>
+              {isPlatformAdmin ? (
+                <select
+                  value={userRow.organization_id || ''}
+                  onChange={(event) => handleUserChange(userRow.id, 'organization_id', event.target.value ? Number(event.target.value) : null)}
+                >
+                  <option value="">—</option>
+                  {organizations.map((org) => (
+                    <option key={org.id} value={org.id}>{org.name} (#{org.id})</option>
+                  ))}
+                </select>
+              ) : (
+                <div className="admin-users-org">
+                  {orgNameById.get(userRow.organization_id) || (userRow.organization_id ? `Org #${userRow.organization_id}` : '—')}
+                </div>
+              )}
+            </div>
+
+            <div className="admin-users-actions">
+              <button className="btn-primary" onClick={() => saveUser(userRow)}>
+                <Save size={16} /> Save
+              </button>
+              <button className="btn-danger" type="button" onClick={() => deactivateUser(userRow)}>
+                <Trash2 size={16} /> Deactivate
+              </button>
+            </div>
           </div>
         ))}
       </div>
