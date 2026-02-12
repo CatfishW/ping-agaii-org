@@ -196,6 +196,8 @@ const GameEmbed = () => {
     };
   };
 
+  const isGeotech = gameId === 'geotech-game';
+
   const handleFullscreen = () => {
     if (unityInstanceRef.current && typeof unityInstanceRef.current.SetFullscreen === 'function') {
       unityInstanceRef.current.SetFullscreen(1);
@@ -249,7 +251,9 @@ const GameEmbed = () => {
             streamingAssetsUrl: buildConfig.streamingAssetsUrl,
             companyName: 'PING',
             productName: moduleInfo?.title || gameId,
-            productVersion: moduleInfo?.version || '1.0.0'
+            productVersion: moduleInfo?.version || '1.0.0',
+            devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+            matchWebGLToCanvasSize: true
           },
           (progress) => {
             setUnityStatus((prev) => ({ ...prev, progress }));
@@ -385,7 +389,7 @@ const GameEmbed = () => {
         )}
       </div>
 
-      <div className="game-iframe-wrapper">
+      <div className={`game-iframe-wrapper${isGeotech ? ' geotech-layout' : ''}`}>
         {hasConsent && !isCheckingConsent ? (
           <div className="unity-container">
             <canvas ref={unityCanvasRef} id={`unity-canvas-${gameId}`} className="unity-canvas" />
