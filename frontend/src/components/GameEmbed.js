@@ -40,6 +40,10 @@ const loadUnityScript = (url) => {
   unityScriptCache[url] = new Promise((resolve, reject) => {
     const existing = document.querySelector(`script[data-unity-loader="${url}"]`);
     if (existing) {
+      if (existing.dataset.unityLoaded === 'true' || existing.readyState === 'complete') {
+        resolve();
+        return;
+      }
       existing.addEventListener('load', () => resolve());
       existing.addEventListener('error', () => reject(new Error('Failed to load Unity loader')));
       return;
@@ -48,7 +52,10 @@ const loadUnityScript = (url) => {
     script.src = url;
     script.async = true;
     script.dataset.unityLoader = url;
-    script.onload = () => resolve();
+    script.onload = () => {
+      script.dataset.unityLoaded = 'true';
+      resolve();
+    };
     script.onerror = () => reject(new Error('Failed to load Unity loader'));
     document.body.appendChild(script);
   });
@@ -67,16 +74,39 @@ const GameEmbed = () => {
   const [unityStatus, setUnityStatus] = useState({ loading: false, progress: 0, error: '' });
   const unityCanvasRef = useRef(null);
   const unityInstanceRef = useRef(null);
+  const unityLoadTokenRef = useRef(0);
+  const telemetrySessionRef = useRef(null);
+
+  useEffect(() => {
+    telemetrySessionRef.current = telemetrySession;
+  }, [telemetrySession]);
+
+  const destroyUnityInstance = async () => {
+    const instance = unityInstanceRef.current;
+    if (!instance || typeof instance.Quit !== 'function') {
+      unityInstanceRef.current = null;
+      return;
+    }
+
+    try {
+      await instance.Quit();
+    } catch (error) {
+      console.warn('[GameEmbed] Failed to quit Unity instance cleanly:', error);
+    } finally {
+      unityInstanceRef.current = null;
+    }
+  };
 
   useEffect(() => {
     checkConsent();
     fetchModule();
-    
-    // Cleanup on unmount
+
     return () => {
       endTelemetrySession();
+      unityLoadTokenRef.current += 1;
+      destroyUnityInstance();
     };
-  }, [user]);
+  }, [user, gameId]);
 
   const fetchModule = async () => {
     try {
@@ -88,11 +118,11 @@ const GameEmbed = () => {
   };
 
   useEffect(() => {
-    // Start telemetry when consent is granted and game loads
+    // Start telemetry per module entry (prevents stale session reuse)
     if (hasConsent && !telemetrySession) {
       startTelemetrySession();
     }
-  }, [hasConsent]);
+  }, [hasConsent, telemetrySession, gameId, moduleInfo?.module_id]);
 
   // Update stats periodically
   useEffect(() => {
@@ -179,7 +209,6 @@ const GameEmbed = () => {
   useEffect(() => {
     if (!hasConsent || isCheckingConsent) return;
     if (!unityCanvasRef.current) return;
-    if (unityInstanceRef.current) return;
 
     const buildConfig = getUnityBuildConfig();
     if (!buildConfig) {
@@ -187,18 +216,32 @@ const GameEmbed = () => {
       return;
     }
 
+    let cancelled = false;
+    const loadToken = ++unityLoadTokenRef.current;
+
     setUnityStatus({ loading: true, progress: 0, error: '' });
 
-    loadUnityScript(buildConfig.loaderUrl).then(() => buildConfig)
-      .then((buildConfig) => {
+    destroyUnityInstance()
+      .then(() => loadUnityScript(buildConfig.loaderUrl))
+      .then(() => {
+        if (cancelled || loadToken !== unityLoadTokenRef.current) {
+          return null;
+        }
         if (typeof window.createUnityInstance !== 'function') {
           throw new Error('Unity loader missing');
         }
-        if (!unityCanvasRef.current.id) {
-          unityCanvasRef.current.id = `unity-canvas-${gameId}`;
+
+        const canvas = unityCanvasRef.current;
+        if (!canvas) {
+          return null;
         }
+
+        if (!canvas.id) {
+          canvas.id = `unity-canvas-${gameId}`;
+        }
+
         return window.createUnityInstance(
-          unityCanvasRef.current,
+          canvas,
           {
             dataUrl: buildConfig.dataUrl,
             frameworkUrl: buildConfig.frameworkUrl,
@@ -214,22 +257,33 @@ const GameEmbed = () => {
         );
       })
       .then((instance) => {
+        if (!instance) {
+          return;
+        }
+
+        if (cancelled || loadToken !== unityLoadTokenRef.current) {
+          instance.Quit().catch(() => {});
+          return;
+        }
+
         unityInstanceRef.current = instance;
         setUnityStatus({ loading: false, progress: 1, error: '' });
         unityBridge.setUnityWindow(window);
       })
       .catch((error) => {
+        if (cancelled) {
+          return;
+        }
         console.error('[GameEmbed] Unity load failed:', error);
         setUnityStatus({ loading: false, progress: 0, error: 'Failed to load Unity build.' });
       });
 
     return () => {
-      if (unityInstanceRef.current && typeof unityInstanceRef.current.Quit === 'function') {
-        unityInstanceRef.current.Quit().catch(() => {});
-        unityInstanceRef.current = null;
-      }
+      cancelled = true;
+      unityLoadTokenRef.current += 1;
+      destroyUnityInstance();
     };
-  }, [hasConsent, isCheckingConsent, gameId, moduleInfo?.build_path]);
+  }, [hasConsent, isCheckingConsent, gameId, moduleInfo?.build_path, moduleInfo?.title, moduleInfo?.version]);
 
 
   const startTelemetrySession = async () => {
@@ -282,7 +336,8 @@ const GameEmbed = () => {
   };
 
   const endTelemetrySession = async () => {
-    if (!telemetrySession) return;
+    const session = telemetrySessionRef.current;
+    if (!session) return;
 
     try {
       await telemetryService.endSession();
@@ -296,7 +351,7 @@ const GameEmbed = () => {
         '/api/telemetry/session/end',
         null,
         {
-          params: { session_id: telemetrySession.session_id },
+          params: { session_id: session.session_id },
           headers
         }
       );
