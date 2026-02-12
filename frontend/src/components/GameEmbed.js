@@ -12,6 +12,22 @@ const UNITY_BUILD_MAP = {
   'forces-motion-basics': {
     basePath: '/games/Force&Motion',
     buildName: ''
+  },
+  newton1: {
+    basePath: '/games/newton1/Build',
+    buildName: 'newton1'
+  },
+  newton2: {
+    basePath: '/games/newton2/Build',
+    buildName: 'newton2'
+  },
+  newton3: {
+    basePath: '/games/newton3/Build',
+    buildName: 'newton3'
+  },
+  'race-game': {
+    basePath: '/games/racegame/Build',
+    buildName: 'racegame'
   }
 };
 
@@ -301,7 +317,7 @@ const GameEmbed = () => {
           <ArrowLeft size={20} />
           <span>Back to Simulations</span>
         </Link>
-        <h2 className="game-title">Forces and Motion: Basics</h2>
+        <h2 className="game-title">{moduleInfo?.title || 'Interactive Simulation'}</h2>
         <button className="btn-secondary fullscreen-btn" onClick={handleFullscreen}>
           Fullscreen
         </button>
