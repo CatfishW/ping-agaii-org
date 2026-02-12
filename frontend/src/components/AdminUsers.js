@@ -176,6 +176,7 @@ const AdminUsers = () => {
       <div className="admin-users-table">
         <div className="admin-users-row admin-users-head">
           <span>User</span>
+          <span>Completed</span>
           <span>Role</span>
           <span>Active</span>
           <span>Verified</span>
@@ -187,6 +188,12 @@ const AdminUsers = () => {
             <div>
               <strong>{userRow.full_name || userRow.username || 'Unknown'}</strong>
               <div className="admin-users-email">{userRow.email || '—'}</div>
+            </div>
+            <div>
+              <strong>{userRow.completed_modules_count || 0}</strong>
+              <div className="admin-users-email">
+                {(userRow.completed_module_ids || []).slice(0, 2).join(', ') || '—'}
+              </div>
             </div>
             <select
               value={userRow.role}

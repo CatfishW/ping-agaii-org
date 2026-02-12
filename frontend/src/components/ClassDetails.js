@@ -432,6 +432,7 @@ const StudentsTab = ({ classId, students, onRefresh }) => {
       <div className="students-table">
         <div className="table-header">
           <div>Student</div>
+          <div>Completed</div>
           <div>Sessions</div>
           <div>Events</div>
           <div>Last Active</div>
@@ -451,6 +452,7 @@ const StudentsTab = ({ classId, students, onRefresh }) => {
                 )}
               </div>
             </div>
+            <div>{student.completed_modules_count || 0}</div>
             <div>{student.total_sessions}</div>
             <div>{student.total_events}</div>
             <div>
@@ -634,6 +636,7 @@ const ModulesTab = ({ classId, joinCode, totalStudents }) => {
                   <div className="module-students-head">
                     <span>Student</span>
                     <span>Played</span>
+                    <span>Completed</span>
                     <span>Sessions</span>
                     <span>Events</span>
                     <span>Last Active</span>
@@ -642,6 +645,7 @@ const ModulesTab = ({ classId, joinCode, totalStudents }) => {
                     <div key={s.user_id} className="module-students-row">
                       <span>{s.name}</span>
                       <span>{s.played ? 'Yes' : 'No'}</span>
+                      <span>{s.completed ? 'Yes' : 'No'}</span>
                       <span>{s.total_sessions}</span>
                       <span>{s.total_events}</span>
                       <span>{s.last_active ? new Date(s.last_active).toLocaleDateString() : '—'}</span>
