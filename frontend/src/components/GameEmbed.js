@@ -197,6 +197,9 @@ const GameEmbed = () => {
   };
 
   const isGeotech = gameId === 'geotech-game';
+  const targetDevicePixelRatio = isGeotech
+    ? Math.min(window.devicePixelRatio || 1, 3)
+    : Math.min(window.devicePixelRatio || 1, 2);
 
   const handleFullscreen = () => {
     if (unityInstanceRef.current && typeof unityInstanceRef.current.SetFullscreen === 'function') {
@@ -252,7 +255,7 @@ const GameEmbed = () => {
             companyName: 'PING',
             productName: moduleInfo?.title || gameId,
             productVersion: moduleInfo?.version || '1.0.0',
-            devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+            devicePixelRatio: targetDevicePixelRatio,
             matchWebGLToCanvasSize: true
           },
           (progress) => {
