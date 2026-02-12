@@ -45,7 +45,8 @@ const AdminCenter = ({ defaultSection = 'overview' }) => {
     title: '',
     subject: 'physics',
     subject_id: null,
-    build_path: ''
+    build_path: '',
+    cover_image_url: ''
   });
 
   // Organizations (platform admin only)
@@ -208,6 +209,7 @@ const AdminCenter = ({ defaultSection = 'overview' }) => {
         subject: module.subject,
         subject_id: module.subject_id,
         build_path: module.build_path,
+        cover_image_url: module.cover_image_url,
         is_published: module.is_published,
         version: module.version
       }, authHeaders);
@@ -229,10 +231,11 @@ const AdminCenter = ({ defaultSection = 'overview' }) => {
         subject: newModule.subject,
         subject_id: newModule.subject_id,
         build_path: newModule.build_path,
+        cover_image_url: newModule.cover_image_url,
         description: ''
       }, authHeaders);
       setModules((prev) => [response.data, ...prev]);
-      setNewModule({ module_id: '', title: '', subject: 'physics', subject_id: null, build_path: '' });
+      setNewModule({ module_id: '', title: '', subject: 'physics', subject_id: null, build_path: '', cover_image_url: '' });
       setMessage({ type: 'success', text: 'Module created.' });
     } catch (error) {
       setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to create module.' });
@@ -553,6 +556,14 @@ const AdminCenter = ({ defaultSection = 'overview' }) => {
                       placeholder="/games/Force&Motion/Build/20251122DrivingBuild"
                     />
                   </label>
+                  <label>
+                    Cover Image URL
+                    <input
+                      value={newModule.cover_image_url}
+                      onChange={(event) => setNewModule({ ...newModule, cover_image_url: event.target.value })}
+                      placeholder="/images/newton1-cover.png"
+                    />
+                  </label>
                   <button className="btn-primary" disabled={saving} onClick={createModule}>
                     <Plus size={16} /> Create Module
                   </button>
@@ -594,6 +605,13 @@ const AdminCenter = ({ defaultSection = 'overview' }) => {
                         <input
                           value={module.build_path || ''}
                           onChange={(event) => handleModuleChange(module.id, 'build_path', event.target.value)}
+                        />
+                      </label>
+                      <label>
+                        Cover Image URL
+                        <input
+                          value={module.cover_image_url || ''}
+                          onChange={(event) => handleModuleChange(module.id, 'cover_image_url', event.target.value)}
                         />
                       </label>
                       <label className="toggle">

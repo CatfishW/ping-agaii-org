@@ -131,7 +131,7 @@ const SimulationBrowser = ({ searchQuery }) => {
           ) : (
             simulations.map((sim) => {
               const simUrl = `/game/${sim.module_id}`;
-              const simImage = sim.image || subjectImages[sim.subject] || '/images/force_motion_cover.png';
+              const simImage = sim.cover_image_url || sim.image || subjectImages[sim.subject] || '/images/force_motion_cover.png';
               const simTags = sim.tags && sim.tags.length ? sim.tags : [sim.subject];
               return (
               <div key={sim.id} className="sim-card">
