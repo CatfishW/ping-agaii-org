@@ -55,9 +55,111 @@
   margin-bottom: 1rem;
 }
 
+.telemetry-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr)) auto;
+  gap: 1rem;
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.telemetry-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.telemetry-metric span {
+  color: #6b7280;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.telemetry-metric strong {
+  color: #111827;
+  font-size: 1.4rem;
+}
+
+.telemetry-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.telemetry-breakdown {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.telemetry-panel,
+.telemetry-catalog {
+  background: white;
+  border-radius: 8px;
+  box-shadow: var(--card-shadow);
+  padding: 1rem;
+}
+
+.telemetry-panel h3,
+.telemetry-catalog h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.telemetry-stat-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0;
+  border-top: 1px solid #eef1f4;
+  font-size: 0.9rem;
+}
+
+.telemetry-stat-row span {
+  color: #374151;
+  word-break: break-word;
+}
+
+.telemetry-stat-row strong {
+  white-space: nowrap;
+  color: #111827;
+}
+
+.telemetry-catalog {
+  margin-bottom: 1rem;
+}
+
+.telemetry-catalog-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 2fr;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid #eef1f4;
+  font-size: 0.9rem;
+  align-items: start;
+}
+
+.telemetry-catalog-row strong {
+  color: #111827;
+}
+
+.telemetry-catalog-row span {
+  color: #374151;
+}
+
+.telemetry-catalog-row em {
+  color: #6b7280;
+  font-style: normal;
+}
+
 .telemetry-table {
   background: white;
-  border-radius: 12px;
+  border-radius: 8px;
   box-shadow: var(--card-shadow);
   overflow: hidden;
 }
@@ -120,6 +222,17 @@
 }
 
 @media (max-width: 900px) {
+  .telemetry-summary,
+  .telemetry-breakdown,
+  .telemetry-catalog-row {
+    grid-template-columns: 1fr;
+  }
+
+  .telemetry-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
   .telemetry-row {
     grid-template-columns: 1fr;
     gap: 0.5rem;

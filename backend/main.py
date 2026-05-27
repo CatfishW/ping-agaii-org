@@ -5,7 +5,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 import json
 
-from database import engine, get_db, SessionLocal
+from database import DATABASE_URL, engine, get_db, SessionLocal
 from models import (
     Base,
     User,
@@ -68,10 +68,10 @@ def ensure_admin_user(db: Session, organization_id: int):
     admin_user = db.query(User).filter(User.username == "admin").first()
     if not admin_user:
         admin_user = User(
-            email="admin@ping.local",
+            email="admin@ping.agaii.org",
             username="admin",
             full_name="Admin",
-            hashed_password=get_password_hash("admin"),
+            hashed_password=get_password_hash("Tang123"),
             role=UserRole.PLATFORM_ADMIN,
             is_active=True,
             is_verified=True,
@@ -79,7 +79,7 @@ def ensure_admin_user(db: Session, organization_id: int):
         )
         db.add(admin_user)
     else:
-        admin_user.hashed_password = get_password_hash("admin")
+        admin_user.hashed_password = get_password_hash("Tang123")
         if not admin_user.organization_id:
             admin_user.organization_id = organization_id
         if admin_user.role != UserRole.PLATFORM_ADMIN:
@@ -131,8 +131,7 @@ def ensure_default_subjects(db: Session):
 
 
 def ensure_default_modules(db: Session):
-    subject = db.query(Subject).filter(Subject.key == "physics").first()
-    subject_id = subject.id if subject else None
+    subjects_by_key = {subject.key: subject for subject in db.query(Subject).all()}
 
     default_modules = [
         {
@@ -168,18 +167,36 @@ def ensure_default_modules(db: Session):
             "title": "GeoTech Lab 1",
             "description": "Complete GeoTech laboratory experiment set 1.",
             "build_path": "/games/geotech-lab1/Build/geotech-lab1",
-            "cover_image_url": "/images/geotech-cover.png",
+            "cover_image_url": "/images/geotech1.png",
         },
         {
             "module_id": "geotech-lab2",
             "title": "GeoTech Lab 2",
             "description": "Complete GeoTech laboratory experiment set 2.",
             "build_path": "/games/geotech-lab2/Build/geotech-lab2",
-            "cover_image_url": "/images/geotech-cover.png",
+            "cover_image_url": "/images/geotech2.png",
+        },
+        {
+            "module_id": "gameheart",
+            "title": "GameHeart",
+            "description": "Explore heart anatomy and biology interactions through an interactive Unity lab.",
+            "subject_key": "biology",
+            "build_path": "/games/gameheart/Build/heart",
+            "cover_image_url": "/images/gameheart-cover.png",
+        },
+        {
+            "module_id": "gamemeetingcells",
+            "title": "Game Meeting Cells",
+            "description": "Learn cell biology concepts through an interactive Meeting Cells simulation.",
+            "subject_key": "biology",
+            "build_path": "/games/gamemeetingcells/Build/MeetingCells_NewEnv",
+            "cover_image_url": "/images/gamemeetingcells-cover.png",
         },
     ]
 
     for item in default_modules:
+        subject_key = item.get("subject_key", "physics")
+        subject = subjects_by_key.get(subject_key)
         module = db.query(Module).filter(Module.module_id == item["module_id"]).first()
         if not module:
             module = Module(module_id=item["module_id"])
@@ -187,8 +204,8 @@ def ensure_default_modules(db: Session):
 
         module.title = item["title"]
         module.description = item["description"]
-        module.subject = "physics"
-        module.subject_id = subject_id
+        module.subject = subject_key
+        module.subject_id = subject.id if subject else None
         module.build_path = item["build_path"]
         module.cover_image_url = item.get("cover_image_url")
         module.is_published = True
@@ -278,6 +295,9 @@ def ensure_default_email_templates(db: Session):
 
 
 def ensure_schema_updates():
+    if DATABASE_URL.startswith("sqlite:"):
+        return
+
     with engine.connect() as conn:
         conn.execute(
             text("""
