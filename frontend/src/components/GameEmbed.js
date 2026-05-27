@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Lock, Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -28,6 +28,14 @@ const UNITY_BUILD_MAP = {
   'race-game': {
     basePath: '/games/racegame/Build',
     buildName: 'racegame'
+  },
+  gameheart: {
+    basePath: '/games/gameheart/Build',
+    buildName: 'heart'
+  },
+  gamemeetingcells: {
+    basePath: '/games/gamemeetingcells/Build',
+    buildName: 'MeetingCells_NewEnv'
   }
 };
 
@@ -76,6 +84,7 @@ const GameEmbed = () => {
   const unityInstanceRef = useRef(null);
   const unityLoadTokenRef = useRef(0);
   const telemetrySessionRef = useRef(null);
+  const unityLoadStartRef = useRef(null);
 
   useEffect(() => {
     telemetrySessionRef.current = telemetrySession;
@@ -181,22 +190,36 @@ const GameEmbed = () => {
     setShowConsentDialog(true);
   };
 
-  const getUnityBuildConfig = () => {
+  const getUnityBuildConfig = useCallback(() => {
     const rawPath = moduleInfo?.build_path || '';
     const mapConfig = UNITY_BUILD_MAP[gameId];
     const base = rawPath || (mapConfig ? `${mapConfig.basePath}/${mapConfig.buildName}` : '');
     if (!base) return null;
     const prefix = base.endsWith('.loader.js') ? base.slice(0, -'.loader.js'.length) : base;
+    const geotechModuleIds = new Set(['geotech-game', 'geotech-lab1', 'geotech-lab2']);
+    const cacheKey = geotechModuleIds.has(gameId)
+      ? Date.now().toString()
+      : moduleInfo?.updated_at
+      ? new Date(moduleInfo.updated_at).getTime().toString()
+      : (moduleInfo?.version || '1.0.0');
+    const withCacheKey = (url) => `${url}?v=${encodeURIComponent(cacheKey)}`;
     return {
-      loaderUrl: `${prefix}.loader.js`,
-      dataUrl: `${prefix}.data`,
-      frameworkUrl: `${prefix}.framework.js`,
-      codeUrl: `${prefix}.wasm`,
+      loaderUrl: withCacheKey(`${prefix}.loader.js`),
+      dataUrl: withCacheKey(`${prefix}.data`),
+      frameworkUrl: withCacheKey(`${prefix}.framework.js`),
+      codeUrl: withCacheKey(`${prefix}.wasm`),
       streamingAssetsUrl: `${prefix.split('/Build/')[0]}/StreamingAssets`
     };
-  };
+  }, [gameId, moduleInfo?.build_path, moduleInfo?.updated_at, moduleInfo?.version]);
 
-  const isGeotech = gameId === 'geotech-game';
+  const logFrontendRoute = useCallback((eventName, details = {}) => {
+    telemetryService.logFrontendRouteEvent(eventName, {
+      gameId,
+      ...details
+    });
+  }, [gameId]);
+
+  const isGeotech = ['geotech-game', 'geotech-lab1', 'geotech-lab2'].includes(gameId);
   const targetDevicePixelRatio = isGeotech
     ? Math.min(window.devicePixelRatio || 1, 3)
     : Math.min(window.devicePixelRatio || 1, 2);
@@ -213,6 +236,7 @@ const GameEmbed = () => {
 
   useEffect(() => {
     if (!hasConsent || isCheckingConsent) return;
+    if (!telemetrySession) return;
     if (!unityCanvasRef.current) return;
 
     const buildConfig = getUnityBuildConfig();
@@ -225,6 +249,11 @@ const GameEmbed = () => {
     const loadToken = ++unityLoadTokenRef.current;
 
     setUnityStatus({ loading: true, progress: 0, error: '' });
+    unityLoadStartRef.current = Date.now();
+    logFrontendRoute('unity_load_started', {
+      phase: 'loading',
+      status: 'started'
+    });
 
     destroyUnityInstance()
       .then(() => loadUnityScript(buildConfig.loaderUrl))
@@ -276,6 +305,12 @@ const GameEmbed = () => {
         unityInstanceRef.current = instance;
         setUnityStatus({ loading: false, progress: 1, error: '' });
         unityBridge.setUnityWindow(window);
+        logFrontendRoute('unity_load_completed', {
+          phase: 'loading',
+          status: 'completed',
+          completed: true,
+          duration_ms: unityLoadStartRef.current ? Date.now() - unityLoadStartRef.current : undefined
+        });
       })
       .catch((error) => {
         if (cancelled) {
@@ -283,6 +318,12 @@ const GameEmbed = () => {
         }
         console.error('[GameEmbed] Unity load failed:', error);
         setUnityStatus({ loading: false, progress: 0, error: 'Failed to load Unity build.' });
+        logFrontendRoute('unity_load_failed', {
+          phase: 'loading',
+          status: 'failed',
+          success: false,
+          duration_ms: unityLoadStartRef.current ? Date.now() - unityLoadStartRef.current : undefined
+        });
       });
 
     return () => {
@@ -290,7 +331,30 @@ const GameEmbed = () => {
       unityLoadTokenRef.current += 1;
       destroyUnityInstance();
     };
-  }, [hasConsent, isCheckingConsent, gameId, moduleInfo?.build_path, moduleInfo?.title, moduleInfo?.version]);
+  }, [hasConsent, isCheckingConsent, telemetrySession, gameId, moduleInfo?.build_path, moduleInfo?.title, moduleInfo?.version, getUnityBuildConfig, logFrontendRoute, targetDevicePixelRatio]);
+
+  useEffect(() => {
+    if (!telemetrySession) return;
+
+    logFrontendRoute('game_view_opened', {
+      phase: 'frontend',
+      status: 'opened'
+    });
+
+    return () => {
+      logFrontendRoute('game_view_closed', {
+        phase: 'frontend',
+        status: 'closed'
+      });
+    };
+  }, [telemetrySession, gameId, logFrontendRoute]);
+
+  const handleCanvasPointerDown = (event) => {
+    telemetryService.recordGameCanvasClick(event, event.currentTarget, {
+      gameId,
+      phase: unityStatus.loading ? 'loading' : 'gameplay'
+    });
+  };
 
 
   const startTelemetrySession = async () => {
@@ -329,7 +393,7 @@ const GameEmbed = () => {
       });
 
       unityBridge.on('game_event', (eventData) => {
-        telemetryService.logEvent('game_event', eventData);
+        telemetryService.logGameEvent(eventData);
       });
 
       unityBridge.on('focus_change', (focused) => {
@@ -395,7 +459,12 @@ const GameEmbed = () => {
       <div className={`game-iframe-wrapper${isGeotech ? ' geotech-layout' : ''}`}>
         {hasConsent && !isCheckingConsent ? (
           <div className="unity-container">
-            <canvas ref={unityCanvasRef} id={`unity-canvas-${gameId}`} className="unity-canvas" />
+            <canvas
+              ref={unityCanvasRef}
+              id={`unity-canvas-${gameId}`}
+              className="unity-canvas"
+              onPointerDown={handleCanvasPointerDown}
+            />
             {unityStatus.loading && (
               <div className="unity-loading">
                 <div className="unity-progress">

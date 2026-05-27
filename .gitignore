@@ -1,0 +1,11 @@
+.artifact-build/
+outputs/
+
+frontend/build/
+frontend/public/games/
+frontend/node_modules/
+
+backend/tests/__pycache__/
+backend/__pycache__/
+
+*.pyc

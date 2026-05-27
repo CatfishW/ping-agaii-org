@@ -133,8 +133,9 @@ const SimulationBrowser = ({ searchQuery }) => {
               const simUrl = `/game/${sim.module_id}`;
               const simImage = sim.cover_image_url || sim.image || subjectImages[sim.subject] || '/images/force_motion_cover.png';
               const simTags = sim.tags && sim.tags.length ? sim.tags : [sim.subject];
+              const isRaceGame = sim.module_id === 'race-game';
               return (
-              <div key={sim.id} className="sim-card">
+              <div key={sim.id} className={`sim-card${isRaceGame ? ' race-game-card' : ''}`}>
                 {sim.badge && (
                   <span className={`sim-badge ${getBadgeClass(sim.badge)}`}>
                     {sim.badge}

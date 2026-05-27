@@ -9,7 +9,7 @@
  * - Respects user consent and organization settings
  */
 
-class TelemetryService {
+export class TelemetryService {
   constructor() {
     this.isEnabled = false;
     this.isConsentGranted = false;
@@ -26,6 +26,8 @@ class TelemetryService {
     this.pageHideHandler = null;
     this.visibilityHandler = null;
     this.sessionEnded = false;
+    this.clickSequence = 0;
+    this.routeStep = 0;
     
     // K-12 Compliance: Track if we're in a text input to disable collection
     this.isInTextInput = false;
@@ -61,6 +63,8 @@ class TelemetryService {
     this.totalEventsCollected = 0;
     this.sessionStartTime = Date.now();
     this.sessionEnded = false;
+    this.clickSequence = 0;
+    this.routeStep = 0;
     
     if (this.isEnabled) {
       this.startListening();
@@ -259,6 +263,88 @@ class TelemetryService {
     }
   }
 
+  logGameEvent(payload = {}) {
+    const eventName = payload.event_name || payload.eventType || payload.type || payload.name || 'game_event';
+    const objectId = payload.object_id || payload.objectId || `events/${eventName}`;
+    this.logEvent('game_event', {
+      ...payload,
+      event_name: eventName,
+      object_id: objectId
+    });
+  }
+
+  nextRouteStep() {
+    this.routeStep += 1;
+    return this.routeStep;
+  }
+
+  normalizePoint(value, max) {
+    if (!max) return 0;
+    const clamped = Math.max(0, Math.min(value, max));
+    return Number((clamped / max).toFixed(4));
+  }
+
+  recordGameCanvasClick(event, canvas, context = {}) {
+    if (!canvas || typeof canvas.getBoundingClientRect !== 'function') return;
+    if (!this.isEnabled || !this.isConsentGranted) return;
+    if (this.totalEventsCollected >= this.maxEventsPerSession) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const width = rect.width || 0;
+    const height = rect.height || 0;
+    if (!width || !height) return;
+
+    const canvasX = Math.max(0, Math.min((event.clientX || 0) - rect.left, width));
+    const canvasY = Math.max(0, Math.min((event.clientY || 0) - rect.top, height));
+    const routeStep = this.nextRouteStep();
+    this.clickSequence += 1;
+
+    this.logEvent('click', {
+      source: 'frontend_canvas',
+      target: 'UNITY_CANVAS',
+      game_id: context.gameId || context.game_id || this.moduleId,
+      phase: context.phase || 'gameplay',
+      element_id: canvas.id || null,
+      button: event.button ?? 0,
+      pointer_type: event.pointerType || 'mouse',
+      x: event.clientX || 0,
+      y: event.clientY || 0,
+      canvas_x: Math.round(canvasX),
+      canvas_y: Math.round(canvasY),
+      normalized_x: this.normalizePoint(canvasX, width),
+      normalized_y: this.normalizePoint(canvasY, height),
+      canvas_width: Math.round(width),
+      canvas_height: Math.round(height),
+      viewport_width: window.innerWidth,
+      viewport_height: window.innerHeight,
+      click_sequence: this.clickSequence,
+      route_step: routeStep
+    });
+  }
+
+  logFrontendRouteEvent(eventName, details = {}) {
+    const gameId = details.gameId || details.game_id || this.moduleId;
+    const routeStep = this.nextRouteStep();
+    this.logGameEvent({
+      event_name: eventName,
+      verb: details.verb || 'experienced',
+      object_id: details.object_id || `frontend/${gameId}/${eventName}`,
+      object_name: details.object_name || eventName,
+      phase: details.phase || 'frontend',
+      status: details.status,
+      success: details.success,
+      completed: details.completed,
+      duration_ms: details.duration_ms,
+      result: details.result,
+      context: {
+        ...(details.context || {}),
+        source: 'frontend',
+        game_id: gameId,
+        route_step: routeStep
+      }
+    });
+  }
+
   /**
    * Start periodic upload timer
    */
@@ -436,7 +522,8 @@ class TelemetryService {
       totalEvents: this.totalEventsCollected,
       bufferedEvents: this.eventBuffer.length,
       isEnabled: this.isEnabled,
-      unityFocused: this.unityFocused
+      unityFocused: this.unityFocused,
+      routeSteps: this.routeStep
     };
   }
 }

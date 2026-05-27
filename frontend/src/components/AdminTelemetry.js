@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Download, Database } from 'lucide-react';
+import { Download, Database, FileJson, Table2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './AdminTelemetry.css';
 
@@ -17,6 +17,8 @@ const AdminTelemetry = () => {
   const [endDate, setEndDate] = useState('');
   const [message, setMessage] = useState('');
   const [offset, setOffset] = useState(0);
+  const [summary, setSummary] = useState(null);
+  const [catalog, setCatalog] = useState([]);
   const limit = 50;
 
   useEffect(() => {
@@ -33,6 +35,37 @@ const AdminTelemetry = () => {
     };
     loadModules();
   }, [isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const loadCatalog = async () => {
+      try {
+        const response = await axios.get('/api/admin/telemetry/event-catalog', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+        });
+        setCatalog(response.data.events || []);
+      } catch (error) {
+        setCatalog([]);
+      }
+    };
+    loadCatalog();
+  }, [isAdmin]);
+
+  const fetchSummary = async () => {
+    try {
+      const response = await axios.get('/api/admin/telemetry/summary', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+        params: {
+          module_id: moduleId || undefined,
+          start_date: startDate || undefined,
+          end_date: endDate || undefined
+        }
+      });
+      setSummary(response.data);
+    } catch (error) {
+      setMessage(error.response?.data?.detail || 'Failed to load telemetry summary.');
+    }
+  };
 
   const fetchSessions = async (nextOffset = 0) => {
     setLoading(true);
@@ -51,10 +84,38 @@ const AdminTelemetry = () => {
       setSessions(response.data.sessions || []);
       setTotal(response.data.total || 0);
       setOffset(nextOffset);
+      if (nextOffset === 0) {
+        await fetchSummary();
+      }
     } catch (error) {
       setMessage(error.response?.data?.detail || 'Failed to load telemetry sessions.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const downloadStandard = async (format) => {
+    try {
+      const response = await axios.get('/api/admin/telemetry/exports/standard', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+        params: {
+          module_id: moduleId || undefined,
+          start_date: startDate || undefined,
+          end_date: endDate || undefined,
+          format
+        },
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      const scope = moduleId || 'all-modules';
+      link.href = url;
+      link.setAttribute('download', `${scope}-telemetry-standard.${format}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      setMessage(`Failed to export ${format.toUpperCase()} telemetry.`);
     }
   };
 
@@ -151,6 +212,71 @@ const AdminTelemetry = () => {
       </div>
 
       {message && <div className="telemetry-message">{message}</div>}
+
+      {summary && (
+        <div className="telemetry-summary">
+          <div className="telemetry-metric">
+            <span>Total Events</span>
+            <strong>{summary.total_events}</strong>
+          </div>
+          <div className="telemetry-metric">
+            <span>Sessions</span>
+            <strong>{summary.total_sessions}</strong>
+          </div>
+          <div className="telemetry-metric">
+            <span>Modules</span>
+            <strong>{summary.total_modules}</strong>
+          </div>
+          <div className="telemetry-metric">
+            <span>Text Inputs</span>
+            <strong>{summary.text_input_events}</strong>
+          </div>
+          <div className="telemetry-actions">
+            <button className="btn-secondary" onClick={() => downloadStandard('json')}>
+              <FileJson size={16} /> xAPI JSON
+            </button>
+            <button className="btn-secondary" onClick={() => downloadStandard('csv')}>
+              <Table2 size={16} /> CSV
+            </button>
+          </div>
+        </div>
+      )}
+
+      {summary && (
+        <div className="telemetry-breakdown">
+          <div className="telemetry-panel">
+            <h3>Event Types</h3>
+            {(summary.event_types || []).slice(0, 8).map((item) => (
+              <div className="telemetry-stat-row" key={item.event_type}>
+                <span>{item.event_type}</span>
+                <strong>{item.count}</strong>
+              </div>
+            ))}
+          </div>
+          <div className="telemetry-panel">
+            <h3>Modules</h3>
+            {(summary.modules || []).slice(0, 8).map((item) => (
+              <div className="telemetry-stat-row" key={item.module_id}>
+                <span>{item.module_id}</span>
+                <strong>{item.events} events / {item.sessions} sessions</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!!catalog.length && (
+        <div className="telemetry-catalog">
+          <h3>Collected Data Plan</h3>
+          {catalog.map((item) => (
+            <div className="telemetry-catalog-row" key={item.event_type}>
+              <strong>{item.event_type}</strong>
+              <span>{item.description}</span>
+              <em>{item.privacy}</em>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="telemetry-table">
         <div className="telemetry-row telemetry-head">

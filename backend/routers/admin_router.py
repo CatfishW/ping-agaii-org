@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi import BackgroundTasks, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, case
@@ -8,6 +8,9 @@ import re
 from pathlib import Path
 import tempfile
 import zipfile
+import csv
+import io
+import json
 from datetime import datetime
 
 from database import get_db
@@ -34,6 +37,7 @@ from models import (
     UserModuleCompletion,
 )
 from routers.auth_router import get_current_user
+from routers.telemetry_router import is_completion_event
 from schemas import (
     EmailTemplateResponse,
     EmailTemplateUpdate,
@@ -53,6 +57,50 @@ from schemas import (
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 TELEMETRY_DATA_DIR = os.getenv("TELEMETRY_DATA_DIR", "/mnt/data/pingdata/telemetry")
+TELEMETRY_EVENT_CATALOG = [
+    {
+        "event_type": "session_start",
+        "verb": "initialized",
+        "description": "Player opened a game module and telemetry session started.",
+        "privacy": "No text content. Stores module and session metadata.",
+    },
+    {
+        "event_type": "session_end",
+        "verb": "terminated",
+        "description": "Player left a game module or telemetry session ended.",
+        "privacy": "No text content. Stores duration and event count.",
+    },
+    {
+        "event_type": "game_event",
+        "verb": "experienced / passed / failed / completed",
+        "description": "Structured Unity gameplay event such as level start, objective complete, score, hint, or failure.",
+        "privacy": "Only whitelisted fields are stored. Text-like fields are reduced to length summaries.",
+    },
+    {
+        "event_type": "key_down / key_up",
+        "verb": "interacted",
+        "description": "Keyboard control event while the game has focus.",
+        "privacy": "Stores browser key code only, such as KeyW or Space. Does not store typed characters.",
+    },
+    {
+        "event_type": "click / pointer / touch",
+        "verb": "interacted",
+        "description": "Pointer interaction with the game canvas when enabled.",
+        "privacy": "Stores interaction coordinates and button/touch metadata, not screen recording.",
+    },
+    {
+        "event_type": "window_focus / window_blur / unity_focus / unity_blur",
+        "verb": "attended / suspended",
+        "description": "Focus state changes for measuring attention and active play time.",
+        "privacy": "No text content.",
+    },
+    {
+        "event_type": "text_input",
+        "verb": "responded",
+        "description": "Text entry event if a game sends one.",
+        "privacy": "Raw text is not stored. Only length, field id, device, and coordinates are kept.",
+    },
+]
 
 
 def sanitize_segment(value: str) -> str:
@@ -86,6 +134,54 @@ def resolve_subject(db: Session, subject_id: int | None, subject_key: str | None
     if subject_key:
         return db.query(Subject).filter(Subject.key == subject_key).first()
     return None
+
+
+def build_telemetry_query(
+    db: Session,
+    module_id: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+):
+    start_dt = parse_date(start_date)
+    end_dt = parse_date(end_date, end_of_day=True)
+
+    query = db.query(BehaviorData)
+    if module_id:
+        query = query.filter(BehaviorData.module_id == module_id)
+    if start_dt:
+        query = query.filter(BehaviorData.timestamp >= start_dt)
+    if end_dt:
+        query = query.filter(BehaviorData.timestamp <= end_dt)
+    return query
+
+
+def parse_event_data(event: BehaviorData) -> dict:
+    if not event.event_data:
+        return {}
+    try:
+        data = json.loads(event.event_data)
+    except json.JSONDecodeError:
+        return {"raw": event.event_data}
+    return data if isinstance(data, dict) else {"value": data}
+
+
+def event_to_export_row(event: BehaviorData) -> dict:
+    payload = parse_event_data(event)
+    xapi = payload.get("xapi") if isinstance(payload.get("xapi"), dict) else None
+    return {
+        "id": event.id,
+        "module_id": event.module_id,
+        "session_id": event.session_id,
+        "event_type": event.event_type,
+        "timestamp": event.timestamp.isoformat() if event.timestamp else None,
+        "actor": xapi.get("actor", {}).get("name") if xapi else payload.get("anon_id"),
+        "verb": xapi.get("verb", {}).get("id") if xapi else None,
+        "object": xapi.get("object", {}).get("id") if xapi else None,
+        "result": xapi.get("result") if xapi else None,
+        "context": xapi.get("context") if xapi else None,
+        "payload": payload,
+        "xapi": xapi,
+    }
 
 
 def require_admin(current_user: User):
@@ -285,6 +381,145 @@ async def list_telemetry_sessions(
         )
 
     return {"total": total, "limit": limit, "offset": offset, "sessions": sessions}
+
+
+@router.get("/telemetry/summary")
+async def get_telemetry_summary(
+    module_id: str | None = Query(default=None),
+    start_date: str | None = Query(default=None),
+    end_date: str | None = Query(default=None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    require_admin(current_user)
+
+    query = build_telemetry_query(db, module_id, start_date, end_date)
+    total_events = query.count()
+    total_sessions = query.with_entities(BehaviorData.session_id).distinct().count()
+    total_modules = query.with_entities(BehaviorData.module_id).distinct().count()
+
+    event_rows = (
+        query.with_entities(BehaviorData.event_type, func.count(BehaviorData.id))
+        .group_by(BehaviorData.event_type)
+        .order_by(func.count(BehaviorData.id).desc())
+        .all()
+    )
+    module_rows = (
+        query.with_entities(
+            BehaviorData.module_id,
+            func.count(BehaviorData.id),
+            func.count(func.distinct(BehaviorData.session_id)),
+        )
+        .group_by(BehaviorData.module_id)
+        .order_by(func.count(BehaviorData.id).desc())
+        .all()
+    )
+
+    completion_count = 0
+    completion_rows = query.with_entities(
+        BehaviorData.event_type, BehaviorData.event_data
+    ).all()
+    for event_type, event_data in completion_rows:
+        payload = {}
+        if event_data:
+            try:
+                parsed = json.loads(event_data)
+                payload = parsed if isinstance(parsed, dict) else {}
+            except json.JSONDecodeError:
+                payload = {}
+        if is_completion_event(event_type, payload):
+            completion_count += 1
+    text_input_count = query.filter(BehaviorData.event_type == "text_input").count()
+
+    return {
+        "total_events": total_events,
+        "total_sessions": total_sessions,
+        "total_modules": total_modules,
+        "completion_events": completion_count,
+        "text_input_events": text_input_count,
+        "event_types": [
+            {"event_type": event_type, "count": count}
+            for event_type, count in event_rows
+        ],
+        "modules": [
+            {"module_id": row[0], "events": row[1], "sessions": row[2]}
+            for row in module_rows
+        ],
+        "generated_at": datetime.utcnow().isoformat(),
+    }
+
+
+@router.get("/telemetry/event-catalog")
+async def get_telemetry_event_catalog(
+    current_user: User = Depends(get_current_user),
+):
+    require_admin(current_user)
+    return {"events": TELEMETRY_EVENT_CATALOG}
+
+
+@router.get("/telemetry/exports/standard")
+async def export_standard_telemetry(
+    module_id: str | None = Query(default=None),
+    start_date: str | None = Query(default=None),
+    end_date: str | None = Query(default=None),
+    format: str = Query(default="json", pattern="^(json|csv)$"),
+    limit: int = Query(default=50000, ge=1, le=200000),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    require_platform_admin(current_user)
+
+    rows = (
+        build_telemetry_query(db, module_id, start_date, end_date)
+        .order_by(BehaviorData.timestamp.asc(), BehaviorData.id.asc())
+        .limit(limit)
+        .all()
+    )
+    export_rows = [event_to_export_row(row) for row in rows]
+    suffix_module = sanitize_segment(module_id or "all-modules")
+
+    if format == "csv":
+        output = io.StringIO()
+        fieldnames = [
+            "id",
+            "module_id",
+            "session_id",
+            "event_type",
+            "timestamp",
+            "actor",
+            "verb",
+            "object",
+            "result",
+            "context",
+        ]
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in export_rows:
+            csv_row = {key: row.get(key) for key in fieldnames}
+            csv_row["result"] = json.dumps(csv_row["result"], ensure_ascii=False)
+            csv_row["context"] = json.dumps(csv_row["context"], ensure_ascii=False)
+            writer.writerow(csv_row)
+        output.seek(0)
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename={suffix_module}-telemetry-standard.csv"
+            },
+        )
+
+    payload = {
+        "exported_at": datetime.utcnow().isoformat(),
+        "total_events": len(export_rows),
+        "events": export_rows,
+    }
+    return StreamingResponse(
+        iter([json.dumps(payload, ensure_ascii=False, default=str)]),
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f"attachment; filename={suffix_module}-telemetry-standard.json"
+        },
+    )
 
 
 @router.get("/telemetry/sessions/{session_id}/download")
