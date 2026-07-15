@@ -24,15 +24,30 @@ from routers import simulation_router
 from routers import invite_router
 from routers import dashboard_router
 from routers import sparc_router, subjects_router
+from routers import llm_router
+from routers import game_login_router
 from app_registry import ensure_default_apps
 from routers.sparc_router import seed_wordgame_scores
 from auth import get_password_hash
+from services.llm_primary_service import LlmPrimaryService
 from sqlalchemy import text
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="PING API", version="2.0.0")
+
+
+@app.on_event("startup")
+async def initialize_llm_primary_service():
+    app.state.llm_primary_service = LlmPrimaryService.from_environment()
+
+
+@app.on_event("shutdown")
+async def close_llm_primary_service():
+    service = getattr(app.state, "llm_primary_service", None)
+    if service is not None:
+        await service.close()
 
 
 @app.on_event("startup")
@@ -404,6 +419,8 @@ app.include_router(invite_router.router)
 app.include_router(dashboard_router.router)
 app.include_router(sparc_router.router)
 app.include_router(admin_router.router)
+app.include_router(llm_router.router)
+app.include_router(game_login_router.router)
 
 
 @app.get("/")

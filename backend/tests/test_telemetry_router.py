@@ -38,6 +38,21 @@ class TelemetryRouterTests(unittest.TestCase):
 
         self.assertTrue(telemetry_router.validate_event_compliance(event))
 
+    def test_legacy_local_guest_user_id_is_normalized(self):
+        event = TelemetryEventCreate(
+            session_id="session-1",
+            user_id="local-guest-browser",
+            guest_id=None,
+            module_id="race-game",
+            event_type="game_event",
+            payload={"verb": "started", "object_id": "race"},
+            timestamp="2026-07-14T07:00:00Z",
+            client_timestamp=1784012400000,
+        )
+
+        self.assertIsNone(event.user_id)
+        self.assertEqual(event.guest_id, "local-guest-browser")
+
     def test_text_input_payload_is_reduced_to_privacy_safe_summary(self):
         event = self.make_event(
             "text_input",

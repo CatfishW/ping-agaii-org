@@ -1,43 +1,17 @@
 import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { Button } from 'antd';
 import { ArrowLeft, Lock, Activity } from 'lucide-react';
+import { ChartIcon, CheckIcon, PauseIcon } from './icons/SketchIcons';
 import { useAuth } from '../context/AuthContext';
 import ConsentModal from './ConsentModal';
 import telemetryService from '../services/TelemetryService';
 import unityBridge from '../services/UnityBridge';
+import { buildAuthContext, normalizeGameEvent } from '../services/GameBridgeProtocol';
+import { resolveUnityBuildConfig } from '../services/UnityBuildConfig';
+import { hasAnonymousConsent, readConsentHandoff } from '../services/ConsentHandoff';
 import axios from 'axios';
 import './GameEmbed.css';
-
-const UNITY_BUILD_MAP = {
-  'forces-motion-basics': {
-    basePath: '/games/Force&Motion',
-    buildName: ''
-  },
-  newton1: {
-    basePath: '/games/newton1/Build',
-    buildName: 'newton1'
-  },
-  newton2: {
-    basePath: '/games/newton2/Build',
-    buildName: 'newton2'
-  },
-  newton3: {
-    basePath: '/games/newton3/Build',
-    buildName: 'newton3'
-  },
-  'race-game': {
-    basePath: '/games/racegame/Build',
-    buildName: 'racegame'
-  },
-  gameheart: {
-    basePath: '/games/gameheart/Build',
-    buildName: 'heart'
-  },
-  gamemeetingcells: {
-    basePath: '/games/gamemeetingcells/Build',
-    buildName: 'MeetingCells_NewEnv'
-  }
-};
 
 const unityScriptCache = {};
 
@@ -70,8 +44,17 @@ const loadUnityScript = (url) => {
   return unityScriptCache[url];
 };
 
-const GameEmbed = () => {
-  const { gameId } = useParams();
+const GameEmbed = ({
+  embedded = false,
+  gameIdOverride,
+  onUnityLoadStart,
+  onUnityLoaded,
+  onUnityLoadError,
+  onUnityGameEvent,
+  storyContext = null
+}) => {
+  const { gameId: routeGameId } = useParams();
+  const gameId = gameIdOverride || routeGameId;
   const { user } = useAuth();
   const [hasConsent, setHasConsent] = useState(false);
   const [showConsentDialog, setShowConsentDialog] = useState(false);
@@ -85,15 +68,130 @@ const GameEmbed = () => {
   const unityLoadTokenRef = useRef(0);
   const telemetrySessionRef = useRef(null);
   const unityLoadStartRef = useRef(null);
+  const authContextRef = useRef(null);
+  const bridgeCleanupRef = useRef(null);
 
   useEffect(() => {
     telemetrySessionRef.current = telemetrySession;
   }, [telemetrySession]);
 
+  const getModuleId = useCallback(() => moduleInfo?.module_id || gameId, [gameId, moduleInfo?.module_id]);
+
+  const refreshAuthContext = useCallback((sessionData = telemetrySessionRef.current) => {
+    const context = buildAuthContext({
+      user,
+      sessionData,
+      moduleId: getModuleId(),
+      consentGranted: hasConsent,
+      storyContext
+    });
+    authContextRef.current = context;
+    return context;
+  }, [getModuleId, hasConsent, storyContext, user]);
+
+  const sendAuthContext = useCallback((message = {}) => {
+    const context = authContextRef.current || refreshAuthContext();
+    if (!context?.sessionId) return;
+
+    const options = message.messageId ? { messageId: message.messageId } : {};
+    unityBridge.sendToGame('auth_context', context, options);
+    telemetryService.logFrontendRouteEvent('auth_context_sent', {
+      gameId,
+      phase: 'bridge',
+      status: 'sent'
+    });
+  }, [gameId, refreshAuthContext]);
+
+  const handleBridgeGameEvent = useCallback((eventData = {}) => {
+    const moduleId = getModuleId();
+    const normalized = normalizeGameEvent(eventData, { moduleId });
+
+    telemetryService.logBridgeEvent(normalized);
+    onUnityGameEvent?.({
+      ...normalized,
+      gameId,
+      moduleId
+    });
+  }, [gameId, getModuleId, onUnityGameEvent]);
+
+  const handleScoreUpdate = useCallback((payload = {}) => {
+    handleBridgeGameEvent({
+      ...payload,
+      event_name: payload.event_name || 'score_update'
+    });
+  }, [handleBridgeGameEvent]);
+
+  const handleLevelComplete = useCallback((payload = {}) => {
+    handleBridgeGameEvent({
+      ...payload,
+      event_name: payload.event_name || 'level_complete',
+      completed: true
+    });
+  }, [handleBridgeGameEvent]);
+
+  const handleModuleComplete = useCallback((payload = {}) => {
+    handleBridgeGameEvent({
+      ...payload,
+      event_name: payload.event_name || 'module_complete',
+      completed: true
+    });
+  }, [handleBridgeGameEvent]);
+
+  const handleAuthRequest = useCallback((payload, message = {}) => {
+    sendAuthContext(message);
+  }, [sendAuthContext]);
+
+  const handleGameReady = useCallback(() => {
+    const session = telemetrySessionRef.current;
+    console.log('[GameEmbed] Game is ready');
+    if (session?.session_id) {
+      unityBridge.telemetryStarted(session.session_id);
+    }
+    sendAuthContext();
+  }, [sendAuthContext]);
+
+  const handleFocusChange = useCallback((focused) => {
+    telemetryService.setUnityFocus(focused);
+  }, []);
+
+  const registerBridgeHandlers = useCallback(() => {
+    bridgeCleanupRef.current?.();
+
+    unityBridge.on('game_ready', handleGameReady);
+    unityBridge.on('auth_request', handleAuthRequest);
+    unityBridge.on('game_event', handleBridgeGameEvent);
+    unityBridge.on('score_update', handleScoreUpdate);
+    unityBridge.on('level_complete', handleLevelComplete);
+    unityBridge.on('module_complete', handleModuleComplete);
+    unityBridge.on('focus_change', handleFocusChange);
+
+    bridgeCleanupRef.current = () => {
+      unityBridge.off('game_ready', handleGameReady);
+      unityBridge.off('auth_request', handleAuthRequest);
+      unityBridge.off('game_event', handleBridgeGameEvent);
+      unityBridge.off('score_update', handleScoreUpdate);
+      unityBridge.off('level_complete', handleLevelComplete);
+      unityBridge.off('module_complete', handleModuleComplete);
+      unityBridge.off('focus_change', handleFocusChange);
+      bridgeCleanupRef.current = null;
+    };
+  }, [
+    handleAuthRequest,
+    handleBridgeGameEvent,
+    handleFocusChange,
+    handleGameReady,
+    handleLevelComplete,
+    handleModuleComplete,
+    handleScoreUpdate
+  ]);
+
   const destroyUnityInstance = async () => {
     const instance = unityInstanceRef.current;
     if (!instance || typeof instance.Quit !== 'function') {
       unityInstanceRef.current = null;
+      if (typeof window !== 'undefined') {
+        delete window.unityInstance;
+      }
       return;
     }
 
@@ -102,6 +200,9 @@ const GameEmbed = () => {
     } catch (error) {
       console.warn('[GameEmbed] Failed to quit Unity instance cleanly:', error);
     } finally {
+      if (typeof window !== 'undefined' && window.unityInstance === instance) {
+        delete window.unityInstance;
+      }
       unityInstanceRef.current = null;
     }
   };
@@ -147,18 +248,33 @@ const GameEmbed = () => {
 
   const checkConsent = async () => {
     const token = localStorage.getItem('access_token');
-    
+
     if (!user || !token) {
       // Not logged in - check localStorage for anonymous consent
-      const anonymousConsent = localStorage.getItem('anonymousConsent');
-      if (anonymousConsent) {
-        setHasConsent(true);
-      } else {
-        setHasConsent(false);
-      }
+      setHasConsent(hasAnonymousConsent());
       setIsCheckingConsent(false);
       return;
     }
+
+    const continueWithRecentConsent = async () => {
+      const handoff = readConsentHandoff();
+      if (!handoff) return false;
+
+      try {
+        await axios.post('/api/auth/consent', handoff, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      } catch (error) {
+        // The player already consented in this browser session. Keep the game moving
+        // and let a later consent check retry the authenticated persistence.
+        console.warn('Could not sync recent consent yet:', error);
+      }
+
+      setHasConsent(true);
+      return true;
+    };
 
     // Logged-in user - check backend
     try {
@@ -170,12 +286,14 @@ const GameEmbed = () => {
 
       if (response.data.has_consent) {
         setHasConsent(true);
-      } else {
+      } else if (!await continueWithRecentConsent()) {
         setHasConsent(false);
       }
     } catch (error) {
       console.error('Error checking consent:', error);
-      setHasConsent(false);
+      if (!await continueWithRecentConsent()) {
+        setHasConsent(false);
+      }
     } finally {
       setIsCheckingConsent(false);
     }
@@ -191,25 +309,7 @@ const GameEmbed = () => {
   };
 
   const getUnityBuildConfig = useCallback(() => {
-    const rawPath = moduleInfo?.build_path || '';
-    const mapConfig = UNITY_BUILD_MAP[gameId];
-    const base = rawPath || (mapConfig ? `${mapConfig.basePath}/${mapConfig.buildName}` : '');
-    if (!base) return null;
-    const prefix = base.endsWith('.loader.js') ? base.slice(0, -'.loader.js'.length) : base;
-    const geotechModuleIds = new Set(['geotech-game', 'geotech-lab1', 'geotech-lab2']);
-    const cacheKey = geotechModuleIds.has(gameId)
-      ? Date.now().toString()
-      : moduleInfo?.updated_at
-      ? new Date(moduleInfo.updated_at).getTime().toString()
-      : (moduleInfo?.version || '1.0.0');
-    const withCacheKey = (url) => `${url}?v=${encodeURIComponent(cacheKey)}`;
-    return {
-      loaderUrl: withCacheKey(`${prefix}.loader.js`),
-      dataUrl: withCacheKey(`${prefix}.data`),
-      frameworkUrl: withCacheKey(`${prefix}.framework.js`),
-      codeUrl: withCacheKey(`${prefix}.wasm`),
-      streamingAssetsUrl: `${prefix.split('/Build/')[0]}/StreamingAssets`
-    };
+    return resolveUnityBuildConfig({ gameId, moduleInfo });
   }, [gameId, moduleInfo?.build_path, moduleInfo?.updated_at, moduleInfo?.version]);
 
   const logFrontendRoute = useCallback((eventName, details = {}) => {
@@ -220,9 +320,16 @@ const GameEmbed = () => {
   }, [gameId]);
 
   const isGeotech = ['geotech-game', 'geotech-lab1', 'geotech-lab2'].includes(gameId);
-  const targetDevicePixelRatio = isGeotech
-    ? Math.min(window.devicePixelRatio || 1, 3)
-    : Math.min(window.devicePixelRatio || 1, 2);
+  const isRaceGame = gameId === 'race-game';
+  const isMobileRaceViewport = isRaceGame && (
+    window.matchMedia?.('(max-width: 768px)').matches
+    || /Android|iPhone|iPad|iPod/i.test(window.navigator.userAgent)
+  );
+  const targetDevicePixelRatio = isMobileRaceViewport
+    ? 1
+    : isGeotech
+      ? Math.min(window.devicePixelRatio || 1, 3)
+      : Math.min(window.devicePixelRatio || 1, 2);
 
   const handleFullscreen = () => {
     if (unityInstanceRef.current && typeof unityInstanceRef.current.SetFullscreen === 'function') {
@@ -249,6 +356,7 @@ const GameEmbed = () => {
     const loadToken = ++unityLoadTokenRef.current;
 
     setUnityStatus({ loading: true, progress: 0, error: '' });
+    onUnityLoadStart?.({ gameId });
     unityLoadStartRef.current = Date.now();
     logFrontendRoute('unity_load_started', {
       phase: 'loading',
@@ -285,7 +393,8 @@ const GameEmbed = () => {
             productName: moduleInfo?.title || gameId,
             productVersion: moduleInfo?.version || '1.0.0',
             devicePixelRatio: targetDevicePixelRatio,
-            matchWebGLToCanvasSize: true
+            matchWebGLToCanvasSize: true,
+            autoSyncPersistentDataPath: true
           },
           (progress) => {
             setUnityStatus((prev) => ({ ...prev, progress }));
@@ -303,7 +412,12 @@ const GameEmbed = () => {
         }
 
         unityInstanceRef.current = instance;
+        window.unityInstance = instance;
         setUnityStatus({ loading: false, progress: 1, error: '' });
+        onUnityLoaded?.({
+          gameId,
+          moduleId: moduleInfo?.module_id || gameId
+        });
         unityBridge.setUnityWindow(window);
         logFrontendRoute('unity_load_completed', {
           phase: 'loading',
@@ -318,6 +432,7 @@ const GameEmbed = () => {
         }
         console.error('[GameEmbed] Unity load failed:', error);
         setUnityStatus({ loading: false, progress: 0, error: 'Failed to load Unity build.' });
+        onUnityLoadError?.({ gameId, error });
         logFrontendRoute('unity_load_failed', {
           phase: 'loading',
           status: 'failed',
@@ -331,7 +446,7 @@ const GameEmbed = () => {
       unityLoadTokenRef.current += 1;
       destroyUnityInstance();
     };
-  }, [hasConsent, isCheckingConsent, telemetrySession, gameId, moduleInfo?.build_path, moduleInfo?.title, moduleInfo?.version, getUnityBuildConfig, logFrontendRoute, targetDevicePixelRatio]);
+  }, [hasConsent, isCheckingConsent, telemetrySession, gameId, moduleInfo?.build_path, moduleInfo?.module_id, moduleInfo?.title, moduleInfo?.version, getUnityBuildConfig, logFrontendRoute, onUnityLoadError, onUnityLoadStart, onUnityLoaded, targetDevicePixelRatio]);
 
   useEffect(() => {
     if (!telemetrySession) return;
@@ -385,26 +500,22 @@ const GameEmbed = () => {
         orgSettings: sessionData.org_settings
       });
 
+      refreshAuthContext(sessionData);
+
       // Set up Unity bridge
       unityBridge.setUnityWindow(window);
-      unityBridge.on('unity_ready', () => {
-        console.log('[GameEmbed] Unity is ready');
-        unityBridge.telemetryStarted(sessionData.session_id);
-      });
-
-      unityBridge.on('game_event', (eventData) => {
-        telemetryService.logGameEvent(eventData);
-      });
-
-      unityBridge.on('focus_change', (focused) => {
-        telemetryService.setUnityFocus(focused);
-      });
+      registerBridgeHandlers();
+      sendAuthContext();
 
       console.log('[GameEmbed] Telemetry session started:', sessionData.session_id);
     } catch (error) {
       console.error('[GameEmbed] Failed to start telemetry session:', error);
     }
   };
+
+  useEffect(() => () => {
+    bridgeCleanupRef.current?.();
+  }, []);
 
   const endTelemetrySession = async () => {
     const session = telemetrySessionRef.current;
@@ -437,26 +548,28 @@ const GameEmbed = () => {
 
     // Render embedded player view
   return (
-    <div className="game-embed-container">
-      <div className="game-header">
-        <Link to="/" className="back-button">
-          <ArrowLeft size={20} />
-          <span>Back to Simulations</span>
-        </Link>
-        <h2 className="game-title">{moduleInfo?.title || 'Interactive Simulation'}</h2>
-        <button className="btn-secondary fullscreen-btn" onClick={handleFullscreen}>
-          Fullscreen
-        </button>
+    <div className={`game-embed-container${embedded ? ' embedded' : ''}`}>
+      {!embedded && (
+        <div className="game-header">
+          <Link to="/" className="back-button">
+            <ArrowLeft size={20} />
+            <span>Back to Simulations</span>
+          </Link>
+          <h2 className="game-title">{moduleInfo?.title || 'Interactive Simulation'}</h2>
+          <Button className="fullscreen-btn" onClick={handleFullscreen}>
+            Fullscreen
+          </Button>
 
-        {telemetryStats && (
-          <div className="telemetry-indicator">
-            <Activity size={16} />
-            <span>{telemetryStats.totalEvents} events</span>
-          </div>
-        )}
-      </div>
+          {telemetryStats && (
+            <div className="telemetry-indicator">
+              <Activity size={16} />
+              <span>{telemetryStats.totalEvents} events</span>
+            </div>
+          )}
+        </div>
+      )}
 
-      <div className={`game-iframe-wrapper${isGeotech ? ' geotech-layout' : ''}`}>
+      <div className={`game-iframe-wrapper${isGeotech ? ' geotech-layout' : ''}${isRaceGame ? ' race-game-layout' : ''}`}>
         {hasConsent && !isCheckingConsent ? (
           <div className="unity-container">
             <canvas
@@ -491,8 +604,8 @@ const GameEmbed = () => {
                     privacy policy, and data collection practices.
                   </p>
                   <div className="game-consent-actions">
-                    <button className="btn-primary" onClick={handleOpenConsent}>Review and Agree</button>
-                    <Link to="/" className="btn-secondary">Back</Link>
+                    <Button type="primary" onClick={handleOpenConsent}>Review and Agree</Button>
+                    {!embedded && <Link to="/" className="btn-secondary">Back</Link>}
                   </div>
                 </>
               )}
@@ -507,44 +620,48 @@ const GameEmbed = () => {
         onConsentComplete={handleConsentComplete}
       />
 
-      <div className="game-instructions">
-        <h3>How to Play</h3>
-        <div className="instruction-grid">
-          <div className="instruction-item">
-            <strong>WASD:</strong> Move character
+      {!embedded && (
+        <div className="game-instructions">
+          <h3>How to Play</h3>
+          <div className="instruction-grid">
+            <div className="instruction-item">
+              <strong>WASD:</strong> Move character
+            </div>
+            <div className="instruction-item">
+              <strong>F:</strong> Get on/off car
+            </div>
+            <div className="instruction-item">
+              <strong>Tab:</strong> Hide/Show Cursor
+            </div>
+            <div className="instruction-item">
+              <strong>V:</strong> Voice Chat
+            </div>
+            <div className="instruction-item">
+              <strong>J:</strong> Objective List
+            </div>
+            <div className="instruction-item">
+              <strong>K:</strong> Objective Track
+            </div>
           </div>
-          <div className="instruction-item">
-            <strong>F:</strong> Get on/off car
-          </div>
-          <div className="instruction-item">
-            <strong>Tab:</strong> Hide/Show Cursor
-          </div>
-          <div className="instruction-item">
-            <strong>V:</strong> Voice Chat
-          </div>
-          <div className="instruction-item">
-            <strong>J:</strong> Objective List
-          </div>
-          <div className="instruction-item">
-            <strong>K:</strong> Objective Track
-          </div>
-        </div>
 
-        <div className="telemetry-notice">
-          <h4>📊 Data Collection Notice</h4>
-          <p>
-            <strong>K-12 Student Privacy:</strong> We collect keyboard inputs and the text you enter
-            during gameplay to understand learning interactions. We do not record your screen.
-          </p>
-          {telemetryStats && (
-            <p className="telemetry-stats">
-              Session: {telemetryStats.sessionId?.slice(0, 8)}... |
-              Events: {telemetryStats.totalEvents} |
-              Status: {telemetryStats.isEnabled ? '✅ Active' : '⏸️ Paused'}
+          <div className="telemetry-notice">
+            <h4 className="notice-title"><ChartIcon size={18} className="li-ico" />Data Collection Notice</h4>
+            <p>
+              <strong>K-12 Student Privacy:</strong> We collect keyboard inputs and the text you enter
+              during gameplay to understand learning interactions. We do not record your screen.
             </p>
-          )}
+            {telemetryStats && (
+              <p className="telemetry-stats">
+                Session: {telemetryStats.sessionId?.slice(0, 8)}... |
+                Events: {telemetryStats.totalEvents} |
+                Status: {telemetryStats.isEnabled
+                  ? (<span className="status-chip"><CheckIcon size={14} className="li-ico li-ico-green" />Active</span>)
+                  : (<span className="status-chip"><PauseIcon size={14} className="li-ico" />Paused</span>)}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 

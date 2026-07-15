@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, model_validator, validator
 from typing import Optional, List
 from datetime import datetime, date
 from models import UserRole
@@ -403,6 +403,24 @@ class TelemetryEventCreate(BaseModel):
     payload: dict
     timestamp: str
     client_timestamp: int
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_legacy_guest_id(cls, values):
+        if not isinstance(values, dict):
+            return values
+
+        normalized = dict(values)
+        raw_user_id = normalized.get("user_id")
+        if isinstance(raw_user_id, str):
+            candidate = raw_user_id.strip()
+            if candidate.isdigit():
+                normalized["user_id"] = int(candidate)
+            else:
+                normalized["user_id"] = None
+                if candidate and not normalized.get("guest_id"):
+                    normalized["guest_id"] = candidate[:255]
+        return normalized
 
 
 class TelemetryEventBatch(BaseModel):

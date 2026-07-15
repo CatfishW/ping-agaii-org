@@ -4,6 +4,15 @@
   padding: 1.5rem 0 3rem;
 }
 
+.game-embed-container.embedded {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  background: #0b0f14;
+  overflow: hidden;
+}
+
 .game-header {
   max-width: 1200px;
   margin: 0 auto 1.25rem;
@@ -71,6 +80,21 @@
   aspect-ratio: 16 / 9;
   max-height: 72vh;
   min-height: 360px;
+}
+
+.game-embed-container.embedded .game-iframe-wrapper {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  min-height: 0;
+  margin: 0;
+  aspect-ratio: auto;
+}
+
+.game-embed-container.embedded .game-iframe-wrapper.geotech-layout {
+  max-width: none;
+  aspect-ratio: auto;
 }
 
 .game-iframe-wrapper.geotech-layout {
@@ -256,6 +280,10 @@
   border-radius: 10px;
 }
 
+.game-embed-container.embedded .unity-container {
+  border-radius: 0;
+}
+
 .unity-canvas {
   width: 100%;
   height: 100%;
@@ -305,5 +333,15 @@
 @media (max-width: 900px) {
   .fullscreen-btn {
     width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .game-iframe-wrapper.race-game-layout {
+    width: calc(100% - 2rem);
+    height: clamp(560px, 76vh, 680px);
+    min-height: 0;
+    max-height: none;
+    aspect-ratio: auto;
   }
 }
