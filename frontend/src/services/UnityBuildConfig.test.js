@@ -42,8 +42,8 @@ describe('resolveUnityBuildConfig', () => {
       }
     });
 
-    expect(config.loaderUrl).toBe('/games/racegame/Build/racegame.loader.js?v=1784224376000');
-    expect(config.dataUrl).toBe('/games/racegame/Build/racegame.data?v=1784224376000');
+    expect(config.loaderUrl).toBe('/games/racegame/Build/racegame.loader.js?v=1784233099000');
+    expect(config.dataUrl).toBe('/games/racegame/Build/racegame.data?v=1784233099000');
   });
 
   test('returns null when neither backend nor fallback build path exists', () => {

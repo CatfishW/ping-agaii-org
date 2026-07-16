@@ -13,7 +13,7 @@ export const UNITY_BUILD_MAP = {
   },
   'race-game': {
     buildPrefix: '/games/racegame/Build/racegame',
-    cacheKey: '1784224376000'
+    cacheKey: '1784233099000'
   },
   'geotech-lab1': {
     buildPrefix: '/games/geotech-lab1/Build/geotech-lab1'

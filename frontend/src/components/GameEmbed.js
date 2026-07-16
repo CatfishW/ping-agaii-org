@@ -631,7 +631,7 @@ const GameEmbed = ({
               <strong>F:</strong> Get on/off car
             </div>
             <div className="instruction-item">
-              <strong>Tab:</strong> Hide/Show Cursor
+              <strong>F1:</strong> Controls Menu
             </div>
             <div className="instruction-item">
               <strong>V:</strong> Voice Chat
